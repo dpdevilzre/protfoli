@@ -3,6 +3,11 @@ import * as THREE from 'three';
 
 export type BackgroundType = 'particles' | 'waves' | 'gradient' | 'net' | 'live' | 'video';
 
+// Debug function to help diagnose background type issues
+const logBackgroundTypeChange = (type: BackgroundType) => {
+  console.log('AnimatedBackground: Rendering background type:', type);
+};
+
 interface AnimatedBackgroundProps {
   type?: BackgroundType;
   color?: string;
@@ -22,6 +27,8 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
   opacity = 0.6,
   interactive = true
 }) => {
+  // Log background type when component renders
+  console.log('AnimatedBackground rendered with type:', type);
   const mountRef = useRef<HTMLDivElement>(null);
   const canvasRef = useRef<HTMLCanvasElement>(null);
   const [dimensions, setDimensions] = useState({ width: 0, height: 0 });
@@ -638,6 +645,7 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
       />
     );
   } else if (type === 'video') {
+    console.log('Rendering VIDEO background type');
     // Import and use dedicated VideoBackground component
     // to ensure consistent video handling across the application
     const VideoBackground = React.lazy(() => import('./VideoBackground'));

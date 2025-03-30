@@ -12,6 +12,7 @@ import { useTheme } from "@/contexts/ThemeContext";
 
 const Home: React.FC = () => {
   const { themeMode, accentColor, backgroundType, colors } = useTheme();
+  console.log('Home: Current background type:', backgroundType);
   
   // React Spring animation for page transition
   const fadeIn = useSpring({

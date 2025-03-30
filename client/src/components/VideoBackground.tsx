@@ -1,4 +1,5 @@
 import React, { useRef, useEffect } from 'react';
+import backgroundVideo from '@assets/3693587-hd_1920_1080_30fps.mp4';
 
 interface VideoBackgroundProps {
   opacity?: number;
@@ -27,7 +28,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.7 }) => {
         playsInline
         style={{ opacity }}
       >
-        <source src="/assets/3693587-hd_1920_1080_30fps.mp4" type="video/mp4" />
+        <source src={backgroundVideo} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
       {/* Add an overlay to darken the video slightly and make text more readable */}

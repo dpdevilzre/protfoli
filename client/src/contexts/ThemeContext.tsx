@@ -139,9 +139,11 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   
   // Set background type and save to localStorage
   const setBackgroundType = (type: BackgroundType) => {
+    console.log('ThemeContext: Setting background type to:', type);
     setBackgroundTypeState(type);
     if (typeof window !== 'undefined') {
       localStorage.setItem('backgroundType', type);
+      console.log('ThemeContext: Saved background type to localStorage:', type);
     }
   };
   

@@ -124,10 +124,13 @@ const ThemeToggle: React.FC = () => {
                   {backgroundTypes.map(bg => (
                     <button
                       key={bg.value}
-                      onClick={() => setBackgroundType(bg.value)}
+                      onClick={() => {
+                        console.log('Background selected:', bg.value);
+                        setBackgroundType(bg.value);
+                      }}
                       className={`py-2 px-3 rounded-md flex items-center justify-center space-x-1 ${
                         bg.value === backgroundType 
-                          ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white' 
+                          ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white font-bold border-2 border-primary' 
                           : 'text-slate-500 dark:text-slate-400'
                       }`}
                       aria-label={bg.name}
