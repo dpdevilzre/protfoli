@@ -21,7 +21,7 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.7 }) => {
     <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
       <video
         ref={videoRef}
-        className="absolute top-0 left-0 min-w-full min-h-full object-cover"
+        className="absolute top-0 left-0 w-full h-full object-cover"
         autoPlay
         loop
         muted
@@ -31,9 +31,9 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.7 }) => {
         <source src={backgroundVideo} type="video/mp4" />
         Your browser does not support the video tag.
       </video>
-      {/* Add an overlay to darken the video slightly and make text more readable */}
+      {/* Enhanced overlay with better text readability */}
       <div 
-        className="absolute top-0 left-0 w-full h-full bg-black dark:opacity-50 opacity-30"
+        className="absolute top-0 left-0 w-full h-full bg-black dark:opacity-60 opacity-50"
         style={{ mixBlendMode: 'multiply' }}
       ></div>
     </div>
