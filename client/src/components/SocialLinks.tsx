@@ -29,7 +29,7 @@ const SocialLinks: React.FC<SocialLinksProps> = ({ vertical = true, className = 
     {
       name: 'Instagram',
       icon: <FaInstagram />,
-      url: 'https://instagram.com/deveshprakash', // Update with correct URL
+      url: 'https://www.instagram.com/dpdevilz', // Updated with user's Instagram account
     }
   ];
 
