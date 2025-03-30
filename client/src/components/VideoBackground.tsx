@@ -19,22 +19,41 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.7 }) => {
 
   return (
     <div className="absolute top-0 left-0 w-full h-full overflow-hidden -z-10 pointer-events-none">
-      <video
-        ref={videoRef}
-        className="absolute top-0 left-0 w-full h-full object-cover"
-        autoPlay
-        loop
-        muted
-        playsInline
-        style={{ opacity }}
-      >
-        <source src={backgroundVideo} type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      {/* Enhanced overlay with better text readability */}
+      {/* Apply blur filter to the video container */}
+      <div className="absolute inset-0 w-full h-full">
+        <video
+          ref={videoRef}
+          className="absolute top-0 left-0 w-full h-full object-cover scale-110" // Scale up slightly to avoid white edges with blur
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ 
+            opacity,
+            filter: 'brightness(0.4) contrast(1.2) blur(8px)'
+          }}
+        >
+          <source src={backgroundVideo} type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
+      </div>
+      
+      {/* Gradient overlay for a more professional look */}
       <div 
-        className="absolute top-0 left-0 w-full h-full bg-black dark:opacity-60 opacity-50"
-        style={{ mixBlendMode: 'multiply' }}
+        className="absolute top-0 left-0 w-full h-full opacity-90"
+        style={{ 
+          background: 'linear-gradient(135deg, rgba(5,5,25,0.95) 0%, rgba(20,20,50,0.85) 100%)',
+          mixBlendMode: 'normal'
+        }}
+      ></div>
+      
+      {/* Additional subtle radial gradient for depth */}
+      <div 
+        className="absolute top-0 left-0 w-full h-full opacity-60"
+        style={{ 
+          background: 'radial-gradient(circle at center, rgba(40,40,120,0.2) 0%, rgba(0,0,20,0.6) 100%)',
+          mixBlendMode: 'overlay'
+        }}
       ></div>
     </div>
   );

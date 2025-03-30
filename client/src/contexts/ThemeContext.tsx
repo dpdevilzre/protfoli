@@ -55,12 +55,13 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     : false;
   
   // Load theme preferences from localStorage or use defaults
+  // Always default to dark mode for Carrd-like experience
   const [themeMode, setThemeMode] = useState<ThemeMode>(() => {
     if (typeof window !== 'undefined') {
       const savedTheme = localStorage.getItem('themeMode');
-      return (savedTheme as ThemeMode) || (prefersDarkMode ? 'dark' : 'light');
+      return (savedTheme as ThemeMode) || 'dark'; // Default to dark mode
     }
-    return 'light';
+    return 'dark'; // Default to dark mode
   });
   
   const [accentColor, setAccentColorState] = useState<AccentColor>(() => {
@@ -100,26 +101,26 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const getColors = (): ThemeColors => {
     const colorMap: Record<AccentColor, {light: string, dark: string}> = {
       orange: { light: '#FF6B35', dark: '#FF8B55' },
-      blue: { light: '#3498db', dark: '#54a8eb' },
-      purple: { light: '#8e44ad', dark: '#ae64cd' },
-      green: { light: '#27ae60', dark: '#47ce80' },
-      pink: { light: '#e84393', dark: '#f863b3' }
+      blue: { light: '#66c6ff', dark: '#80d0ff' },  // Brighter blue that pops on dark backgrounds
+      purple: { light: '#a56bff', dark: '#bd8bff' }, // Vibrant purple that matches Carrd style
+      green: { light: '#4cd3a5', dark: '#6bdfb9' },  // Modern teal-green
+      pink: { light: '#ff6bc6', dark: '#ff8bd6' }    // Neon pink like in modern portfolios
     };
     
     const secondaryColorMap: Record<AccentColor, {light: string, dark: string}> = {
       orange: { light: '#f8b195', dark: '#f8c2a9' },
-      blue: { light: '#a0cfed', dark: '#b5dbf2' },
-      purple: { light: '#c8a1d8', dark: '#d5b6e1' },
-      green: { light: '#a3e0be', dark: '#b9e9cf' },
-      pink: { light: '#f5a9c9', dark: '#f8bfd7' }
+      blue: { light: '#cceeff', dark: '#e0f5ff' },   // Lighter blue for secondary elements
+      purple: { light: '#e0ccff', dark: '#ecdcff' }, // Soft purple for accents
+      green: { light: '#c8f7e6', dark: '#dffaf0' },  // Soft teal for accents
+      pink: { light: '#ffd9f0', dark: '#ffe6f5' }    // Soft pink for accents
     };
     
     return {
       primary: isDark ? colorMap[accentColor].dark : colorMap[accentColor].light,
       secondary: isDark ? secondaryColorMap[accentColor].dark : secondaryColorMap[accentColor].light,
-      background: isDark ? '#0f172a' : '#ffffff',
-      text: isDark ? '#f1f5f9' : '#1e293b',
-      textSecondary: isDark ? '#94a3b8' : '#64748b',
+      background: isDark ? '#0a0a18' : '#ffffff',  // Darker blue-black like Carrd site
+      text: isDark ? '#ffffff' : '#1e293b',        // Pure white text on dark background for better readability
+      textSecondary: isDark ? '#bbc2d0' : '#64748b', // Lighter secondary text for better contrast
       accent: isDark ? colorMap[accentColor].dark : colorMap[accentColor].light
     };
   };
