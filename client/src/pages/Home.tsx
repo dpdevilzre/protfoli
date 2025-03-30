@@ -8,8 +8,11 @@ import ContactSection from "@/components/ContactSection";
 import Footer from "@/components/Footer";
 import AnimatedBackground from "@/components/AnimatedBackground";
 import { useSpring, animated } from '@react-spring/web';
+import { useTheme } from "@/contexts/ThemeContext";
 
 const Home: React.FC = () => {
+  const { themeMode, accentColor, backgroundType, colors } = useTheme();
+  
   // React Spring animation for page transition
   const fadeIn = useSpring({
     from: { opacity: 0 },
@@ -51,34 +54,79 @@ const Home: React.FC = () => {
   return (
     <animated.div style={fadeIn}>
       <style>{`
+        :root {
+          --primary: ${colors.primary};
+          --primary-foreground: white;
+        }
+        
+        .text-primary {
+          color: var(--primary);
+        }
+        
+        .bg-primary {
+          background-color: var(--primary);
+        }
+        
+        .border-primary {
+          border-color: var(--primary);
+        }
+        
+        .ring-primary {
+          --tw-ring-color: var(--primary);
+        }
+        
+        .focus-ring-primary {
+          --tw-ring-color: var(--primary);
+        }
+        
         .section-fade-in {
           opacity: 0;
           transform: translateY(20px);
           transition: opacity 0.7s ease, transform 0.7s ease;
         }
+        
         .section-visible {
           opacity: 1;
           transform: translateY(0);
         }
+        
         html {
           scroll-behavior: smooth;
+          background-color: ${themeMode === 'dark' ? colors.background : '#ffffff'};
+          color: ${themeMode === 'dark' ? colors.text : colors.text};
         }
+        
+        body {
+          transition: background-color 0.3s ease, color 0.3s ease;
+        }
+        
         ::-webkit-scrollbar {
           width: 10px;
         }
+        
         ::-webkit-scrollbar-track {
-          background: #f1f1f1;
+          background: ${themeMode === 'dark' ? '#1e293b' : '#f1f1f1'};
         }
+        
         ::-webkit-scrollbar-thumb {
-          background: rgba(255, 107, 53, 0.5);
+          background: ${colors.primary}80;
           border-radius: 5px;
         }
+        
         ::-webkit-scrollbar-thumb:hover {
-          background: rgba(255, 107, 53, 0.8);
+          background: ${colors.primary};
+        }
+        
+        .dark {
+          color-scheme: dark;
         }
       `}</style>
       <div className="relative overflow-hidden">
-        <AnimatedBackground />
+        <AnimatedBackground 
+          type={backgroundType}
+          color={colors.primary}
+          secondaryColor={colors.secondary}
+        />
         <Header />
         <main className="pt-16">
           <HeroSection />
