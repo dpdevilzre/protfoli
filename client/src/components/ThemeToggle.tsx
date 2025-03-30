@@ -28,6 +28,7 @@ const ThemeToggle: React.FC = () => {
   
   // Available background types
   const backgroundTypes: { value: BackgroundType; icon: React.ReactNode; name: string }[] = [
+    { value: 'live', icon: <Grid3X3 size={16} />, name: 'Pro' },
     { value: 'particles', icon: <Grid3X3 size={16} />, name: 'Particles' },
     { value: 'waves', icon: <Waves size={16} />, name: 'Waves' },
     { value: 'gradient', icon: <GripHorizontal size={16} />, name: 'Gradient' },

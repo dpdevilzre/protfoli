@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-export type BackgroundType = 'particles' | 'waves' | 'gradient' | 'net';
+export type BackgroundType = 'particles' | 'waves' | 'gradient' | 'net' | 'live';
 
 interface AnimatedBackgroundProps {
   type?: BackgroundType;
@@ -370,6 +370,226 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     } : { r: 255, g: 107, b: 53 }; // Default to orange if invalid hex
   };
   
+  // Create Live background animation with canvas
+  useEffect(() => {
+    if (type !== 'live' || !canvasRef.current) return;
+    
+    const canvas = canvasRef.current;
+    const ctx = canvas.getContext('2d');
+    if (!ctx) return;
+    
+    const resizeCanvas = () => {
+      canvas.width = window.innerWidth;
+      canvas.height = window.innerHeight;
+    };
+    
+    resizeCanvas();
+    window.addEventListener('resize', resizeCanvas);
+    
+    let animationFrameId: number;
+    const nodes: Array<{
+      x: number;
+      y: number;
+      radius: number;
+      vx: number;
+      vy: number;
+      color: string;
+      connections: number[];
+    }> = [];
+    
+    // Create nodes
+    const numNodes = Math.min(80, Math.max(30, Math.floor(window.innerWidth * window.innerHeight / 20000)));
+    const primaryColorObj = hexToRgb(color);
+    const secondaryColorObj = hexToRgb(secondaryColor);
+    
+    for (let i = 0; i < numNodes; i++) {
+      // Create gradient colors between primary and secondary
+      const ratio = i / numNodes;
+      const r = Math.floor(primaryColorObj.r * (1 - ratio) + secondaryColorObj.r * ratio);
+      const g = Math.floor(primaryColorObj.g * (1 - ratio) + secondaryColorObj.g * ratio);
+      const b = Math.floor(primaryColorObj.b * (1 - ratio) + secondaryColorObj.b * ratio);
+      
+      nodes.push({
+        x: Math.random() * canvas.width,
+        y: Math.random() * canvas.height,
+        radius: Math.random() * 2 + 1,
+        vx: (Math.random() - 0.5) * 0.5,
+        vy: (Math.random() - 0.5) * 0.5,
+        color: `rgba(${r}, ${g}, ${b}, ${0.3 + Math.random() * 0.5})`,
+        connections: []
+      });
+    }
+    
+    // Calculate initial connections between nodes
+    const maxDistance = Math.min(canvas.width, canvas.height) / 4;
+    updateConnections();
+    
+    function updateConnections() {
+      // Reset connections
+      nodes.forEach(node => node.connections = []);
+      
+      // Calculate new connections based on distance
+      for (let i = 0; i < nodes.length; i++) {
+        for (let j = i + 1; j < nodes.length; j++) {
+          const dx = nodes[i].x - nodes[j].x;
+          const dy = nodes[i].y - nodes[j].y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < maxDistance) {
+            nodes[i].connections.push(j);
+            nodes[j].connections.push(i);
+          }
+        }
+      }
+    }
+    
+    // Mouse interaction variables
+    let mouseX = 0;
+    let mouseY = 0;
+    let isMouseMoving = false;
+    let mouseTimer: number | null = null;
+    
+    const handleMouseMove = (e: MouseEvent) => {
+      mouseX = e.clientX;
+      mouseY = e.clientY;
+      isMouseMoving = true;
+      
+      // Reset timer
+      if (mouseTimer) clearTimeout(mouseTimer);
+      
+      // Set a timer to detect when mouse stops moving
+      mouseTimer = window.setTimeout(() => {
+        isMouseMoving = false;
+      }, 100);
+    };
+    
+    if (interactive) {
+      window.addEventListener('mousemove', handleMouseMove);
+    }
+    
+    const draw = () => {
+      ctx.clearRect(0, 0, canvas.width, canvas.height);
+      
+      // Update node positions
+      nodes.forEach((node) => {
+        node.x += node.vx;
+        node.y += node.vy;
+        
+        // Bounce off edges
+        if (node.x < 0 || node.x > canvas.width) node.vx *= -1;
+        if (node.y < 0 || node.y > canvas.height) node.vy *= -1;
+        
+        // Keep within bounds
+        node.x = Math.max(0, Math.min(canvas.width, node.x));
+        node.y = Math.max(0, Math.min(canvas.height, node.y));
+        
+        // Mouse interaction
+        if (interactive && isMouseMoving) {
+          const dx = mouseX - node.x;
+          const dy = mouseY - node.y;
+          const distance = Math.sqrt(dx * dx + dy * dy);
+          
+          if (distance < 150) {
+            // Push nodes away from mouse
+            const angle = Math.atan2(dy, dx);
+            const force = 0.8 * (1 - distance / 150);
+            
+            node.vx -= Math.cos(angle) * force;
+            node.vy -= Math.sin(angle) * force;
+          }
+        }
+        
+        // Apply some damping
+        node.vx *= 0.99;
+        node.vy *= 0.99;
+        
+        // Add some random motion
+        node.vx += (Math.random() - 0.5) * 0.01;
+        node.vy += (Math.random() - 0.5) * 0.01;
+      });
+      
+      // Periodically update connections as nodes move
+      if (Math.random() < 0.05) {
+        updateConnections();
+      }
+      
+      // Draw connections first (behind nodes)
+      ctx.lineWidth = 0.5;
+      
+      nodes.forEach((node, i) => {
+        node.connections.forEach(j => {
+          if (j > i) { // Avoid drawing connections twice
+            const otherNode = nodes[j];
+            const dx = node.x - otherNode.x;
+            const dy = node.y - otherNode.y;
+            const distance = Math.sqrt(dx * dx + dy * dy);
+            
+            // Fade lines based on distance
+            const opacity = 1 - distance / maxDistance;
+            
+            // Draw line with gradient
+            const gradient = ctx.createLinearGradient(
+              node.x, node.y, otherNode.x, otherNode.y
+            );
+            
+            gradient.addColorStop(0, node.color);
+            gradient.addColorStop(1, otherNode.color);
+            
+            ctx.strokeStyle = gradient;
+            ctx.globalAlpha = opacity * 0.5;
+            
+            ctx.beginPath();
+            ctx.moveTo(node.x, node.y);
+            ctx.lineTo(otherNode.x, otherNode.y);
+            ctx.stroke();
+          }
+        });
+      });
+      
+      // Reset global alpha for nodes
+      ctx.globalAlpha = 1;
+      
+      // Draw nodes
+      nodes.forEach(node => {
+        ctx.fillStyle = node.color;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, node.radius, 0, Math.PI * 2);
+        ctx.fill();
+        
+        // Add glow effect
+        const glowSize = node.radius * 5;
+        const radialGradient = ctx.createRadialGradient(
+          node.x, node.y, 0,
+          node.x, node.y, glowSize
+        );
+        
+        radialGradient.addColorStop(0, node.color);
+        radialGradient.addColorStop(1, 'rgba(0,0,0,0)');
+        
+        ctx.fillStyle = radialGradient;
+        ctx.globalAlpha = 0.1;
+        ctx.beginPath();
+        ctx.arc(node.x, node.y, glowSize, 0, Math.PI * 2);
+        ctx.fill();
+        
+        ctx.globalAlpha = 1;
+      });
+      
+      animationFrameId = requestAnimationFrame(draw);
+    };
+    
+    draw();
+    
+    return () => {
+      window.removeEventListener('resize', resizeCanvas);
+      if (interactive) {
+        window.removeEventListener('mousemove', handleMouseMove);
+      }
+      if (mouseTimer) clearTimeout(mouseTimer);
+      cancelAnimationFrame(animationFrameId);
+    };
+  }, [type, color, secondaryColor, interactive, opacity]);
+
   if (type === 'gradient') {
     // CSS gradient background
     return (
@@ -401,6 +621,15 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
     );
   } else if (type === 'waves') {
     // Canvas-based waves
+    return (
+      <canvas
+        ref={canvasRef}
+        className="absolute inset-0 -z-10 pointer-events-none"
+        style={{ opacity }}
+      />
+    );
+  } else if (type === 'live') {
+    // Canvas-based network nodes - professional look
     return (
       <canvas
         ref={canvasRef}

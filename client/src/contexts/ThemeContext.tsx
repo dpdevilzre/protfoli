@@ -27,7 +27,7 @@ interface ThemeContextType {
 const ThemeContext = createContext<ThemeContextType>({
   themeMode: 'light',
   accentColor: 'orange',
-  backgroundType: 'particles',
+  backgroundType: 'live',
   colors: {
     primary: '#FF6B35',
     secondary: '#f8b195',
@@ -74,9 +74,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [backgroundType, setBackgroundTypeState] = useState<BackgroundType>(() => {
     if (typeof window !== 'undefined') {
       const savedBackground = localStorage.getItem('backgroundType');
-      return (savedBackground as BackgroundType) || 'particles';
+      return (savedBackground as BackgroundType) || 'live';
     }
-    return 'particles';
+    return 'live';
   });
   
   const isDark = themeMode === 'dark';
