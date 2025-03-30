@@ -74,9 +74,9 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
   const [backgroundType, setBackgroundTypeState] = useState<BackgroundType>(() => {
     if (typeof window !== 'undefined') {
       const savedBackground = localStorage.getItem('backgroundType');
-      return (savedBackground as BackgroundType) || 'live';
+      return (savedBackground as BackgroundType) || 'video';
     }
-    return 'live';
+    return 'video';
   });
   
   const isDark = themeMode === 'dark';

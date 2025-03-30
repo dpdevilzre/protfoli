@@ -1,7 +1,7 @@
 import React, { useEffect, useRef, useState } from 'react';
 import * as THREE from 'three';
 
-export type BackgroundType = 'particles' | 'waves' | 'gradient' | 'net' | 'live';
+export type BackgroundType = 'particles' | 'waves' | 'gradient' | 'net' | 'live' | 'video';
 
 interface AnimatedBackgroundProps {
   type?: BackgroundType;
@@ -636,6 +636,15 @@ const AnimatedBackground: React.FC<AnimatedBackgroundProps> = ({
         className="absolute inset-0 -z-10 pointer-events-none"
         style={{ opacity }}
       />
+    );
+  } else if (type === 'video') {
+    // Import and use dedicated VideoBackground component
+    // to ensure consistent video handling across the application
+    const VideoBackground = React.lazy(() => import('./VideoBackground'));
+    return (
+      <React.Suspense fallback={<div className="absolute inset-0 -z-10 bg-black/30" />}>
+        <VideoBackground opacity={opacity} />
+      </React.Suspense>
     );
   } else {
     // Three.js based animations (particles and net)
