@@ -1,9 +1,11 @@
-import React from 'react';
+import React, { useRef, useEffect } from 'react';
 import { useForm } from 'react-hook-form';
 import { z } from 'zod';
 import { zodResolver } from '@hookform/resolvers/zod';
 import { apiRequest } from '@/lib/queryClient';
 import { useToast } from '@/hooks/use-toast';
+// Import framer-motion for animations instead of Velocity.js
+import { motion, useAnimation } from 'framer-motion';
 
 const contactFormSchema = z.object({
   name: z.string().min(1, 'Name is required'),
@@ -16,6 +18,10 @@ type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 const ContactSection: React.FC = () => {
   const { toast } = useToast();
+  const formRef = useRef<HTMLFormElement>(null);
+  const formContainerRef = useRef<HTMLDivElement>(null);
+  const formControls = useAnimation();
+  
   const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
@@ -28,13 +34,33 @@ const ContactSection: React.FC = () => {
 
   const onSubmit = async (data: ContactFormValues) => {
     try {
+      // Animate the submit button press effect
+      formControls.start({
+        scale: [1, 0.98, 1],
+        transition: { duration: 0.3 }
+      });
+      
       await apiRequest('POST', '/api/contact', data);
+      
+      // Success animation - pulse the form
+      formControls.start({
+        scale: [1, 1.02, 1],
+        transition: { duration: 0.5 }
+      });
+      
       toast({
         title: 'Message sent!',
         description: 'Thank you for your message. I will get back to you soon.',
       });
+      
       reset();
     } catch (error) {
+      // Error animation - shake the form
+      formControls.start({
+        x: [0, -10, 10, -10, 10, 0],
+        transition: { duration: 0.5 }
+      });
+      
       toast({
         title: 'Error',
         description: 'There was a problem sending your message. Please try again.',
@@ -112,12 +138,23 @@ const ContactSection: React.FC = () => {
                 </div>
               </div>
               
-              <div className="md:w-3/5 p-8">
+              <div className="md:w-3/5 p-8" ref={formContainerRef}>
                 <h3 className="text-2xl font-semibold text-gray-900 mb-6">Send me a message</h3>
                 
-                <form onSubmit={handleSubmit(onSubmit)}>
+                <motion.form 
+                  ref={formRef} 
+                  onSubmit={handleSubmit(onSubmit)}
+                  animate={formControls}
+                  initial={{ opacity: 0, y: 20 }}
+                  transition={{ duration: 0.5 }}
+                >
                   <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <div>
+                    <motion.div 
+                      className="form-field"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.1 }}
+                    >
                       <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
                       <input 
                         type="text" 
@@ -127,8 +164,13 @@ const ContactSection: React.FC = () => {
                         placeholder="Your name" 
                       />
                       {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
-                    </div>
-                    <div>
+                    </motion.div>
+                    <motion.div 
+                      className="form-field"
+                      initial={{ opacity: 0, y: 20 }}
+                      animate={{ opacity: 1, y: 0 }}
+                      transition={{ duration: 0.3, delay: 0.2 }}
+                    >
                       <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
                       <input 
                         type="email" 
@@ -138,10 +180,15 @@ const ContactSection: React.FC = () => {
                         placeholder="Your email" 
                       />
                       {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
-                    </div>
+                    </motion.div>
                   </div>
                   
-                  <div className="mb-6">
+                  <motion.div 
+                    className="mb-6 form-field"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.3 }}
+                  >
                     <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
                     <input 
                       type="text" 
@@ -151,9 +198,14 @@ const ContactSection: React.FC = () => {
                       placeholder="Subject" 
                     />
                     {errors.subject && <p className="mt-1 text-sm text-red-500">{errors.subject.message}</p>}
-                  </div>
+                  </motion.div>
                   
-                  <div className="mb-6">
+                  <motion.div 
+                    className="mb-6 form-field"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.4 }}
+                  >
                     <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
                     <textarea 
                       id="message" 
@@ -163,16 +215,25 @@ const ContactSection: React.FC = () => {
                       placeholder="Your message"
                     ></textarea>
                     {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>}
-                  </div>
+                  </motion.div>
                   
-                  <button 
-                    type="submit" 
-                    disabled={isSubmitting}
-                    className="w-full px-8 py-3 bg-primary text-white font-medium rounded-md shadow hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 disabled:opacity-70"
+                  <motion.div 
+                    className="form-field"
+                    initial={{ opacity: 0, y: 20 }}
+                    animate={{ opacity: 1, y: 0 }}
+                    transition={{ duration: 0.3, delay: 0.5 }}
+                    whileHover={{ scale: 1.02 }}
+                    whileTap={{ scale: 0.98 }}
                   >
-                    {isSubmitting ? 'Sending...' : 'Send Message'}
-                  </button>
-                </form>
+                    <button 
+                      type="submit" 
+                      disabled={isSubmitting}
+                      className="w-full px-8 py-3 bg-primary text-white font-medium rounded-md shadow hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 disabled:opacity-70"
+                    >
+                      {isSubmitting ? 'Sending...' : 'Send Message'}
+                    </button>
+                  </motion.div>
+                </motion.form>
               </div>
             </div>
           </div>

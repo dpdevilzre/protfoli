@@ -1,5 +1,10 @@
 import React, { useEffect, useRef } from 'react';
 import { Progress } from '@/components/ui/progress';
+import gsap from 'gsap';
+import { ScrollTrigger } from 'gsap/ScrollTrigger';
+
+// Register ScrollTrigger plugin
+gsap.registerPlugin(ScrollTrigger);
 
 interface SkillProps {
   name: string;
@@ -25,32 +30,55 @@ const professionalSkills: SkillProps[] = [
 const SkillBar: React.FC<SkillProps> = ({ name, percentage }) => {
   const [value, setValue] = React.useState(0);
   const progressRef = useRef<HTMLDivElement>(null);
-  const isVisible = useRef(false);
-
+  const percentRef = useRef<HTMLSpanElement>(null);
+  const skillNameRef = useRef<HTMLSpanElement>(null);
+  
   useEffect(() => {
-    const checkVisibility = () => {
-      if (progressRef.current && !isVisible.current) {
-        const rect = progressRef.current.getBoundingClientRect();
-        if (rect.top < window.innerHeight && rect.bottom >= 0) {
-          setValue(percentage);
-          isVisible.current = true;
+    if (progressRef.current && percentRef.current && skillNameRef.current) {
+      const el = progressRef.current;
+      
+      // Create GSAP animation for the skill bar
+      const tl = gsap.timeline({
+        scrollTrigger: {
+          trigger: el,
+          start: "top 80%", 
+          end: "bottom 20%",
+          toggleActions: "play none none reverse"
         }
-      }
-    };
-
-    checkVisibility();
-    window.addEventListener('scroll', checkVisibility);
-
-    return () => {
-      window.removeEventListener('scroll', checkVisibility);
-    };
+      });
+      
+      // Animate skill name with slight bounce
+      tl.from(skillNameRef.current, {
+        x: -20,
+        opacity: 0,
+        duration: 0.5,
+        ease: "back.out(1.7)"
+      });
+      
+      // Animate percentage counter
+      tl.from(percentRef.current, {
+        textContent: 0,
+        duration: 1.5,
+        ease: "power2.out",
+        snap: { textContent: 1 },
+        onUpdate: () => {
+          setValue(parseInt(percentRef.current!.textContent || "0"));
+        }
+      }, "-=0.3");
+      
+      // Setup ScrollTrigger cleanup
+      return () => {
+        tl.scrollTrigger && tl.scrollTrigger.kill();
+        tl.kill();
+      };
+    }
   }, [percentage]);
 
   return (
     <div className="mb-6" ref={progressRef}>
       <div className="flex justify-between mb-2">
-        <span className="font-medium text-gray-700">{name}</span>
-        <span className="text-sm text-gray-500">{percentage}%</span>
+        <span className="font-medium text-gray-700" ref={skillNameRef}>{name}</span>
+        <span className="text-sm text-gray-500" ref={percentRef}>{percentage}%</span>
       </div>
       <Progress value={value} className="h-2" />
     </div>

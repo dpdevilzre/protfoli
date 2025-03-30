@@ -1,4 +1,5 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import anime from 'animejs';
 
 interface ProjectProps {
   title: string;
@@ -7,6 +8,7 @@ interface ProjectProps {
   iconBgClass: string;
   tags: string[];
   tagBgClass: string;
+  index?: number;
 }
 
 const projects: ProjectProps[] = [
@@ -36,12 +38,92 @@ const projects: ProjectProps[] = [
   }
 ];
 
-const ProjectCard: React.FC<ProjectProps> = ({ title, description, icon, iconBgClass, tags, tagBgClass }) => {
+const ProjectCard: React.FC<ProjectProps> = ({ title, description, icon, iconBgClass, tags, tagBgClass, index = 0 }) => {
+  const cardRef = useRef<HTMLDivElement>(null);
+  const iconRef = useRef<HTMLElement>(null);
+  const tagsRef = useRef<HTMLDivElement>(null);
+
+  // Mouse hover effect using anime.js
+  useEffect(() => {
+    const card = cardRef.current;
+    if (!card) return;
+
+    // Initialize card animation
+    card.addEventListener('mouseenter', () => {
+      anime({
+        targets: card,
+        translateY: -15,
+        boxShadow: '0 20px 25px -5px rgba(0, 0, 0, 0.1), 0 10px 10px -5px rgba(0, 0, 0, 0.04)',
+        duration: 500,
+        easing: 'easeOutElastic(1, .6)'
+      });
+
+      // Animate icon
+      if (iconRef.current) {
+        anime({
+          targets: iconRef.current,
+          scale: 1.2,
+          rotate: '10deg',
+          duration: 500,
+          easing: 'easeOutElastic(1, .8)'
+        });
+      }
+    });
+
+    card.addEventListener('mouseleave', () => {
+      anime({
+        targets: card,
+        translateY: 0,
+        boxShadow: '0 4px 6px -1px rgba(0, 0, 0, 0.1), 0 2px 4px -1px rgba(0, 0, 0, 0.06)',
+        duration: 500,
+        easing: 'easeOutElastic(1, .6)'
+      });
+
+      // Reset icon
+      if (iconRef.current) {
+        anime({
+          targets: iconRef.current,
+          scale: 1,
+          rotate: '0deg',
+          duration: 500,
+          easing: 'easeOutElastic(1, .8)'
+        });
+      }
+    });
+
+    // Initial entrance animation with delay based on index
+    anime({
+      targets: card,
+      opacity: [0, 1],
+      translateY: [50, 0],
+      delay: index * 100,
+      duration: 800,
+      easing: 'easeOutCubic'
+    });
+
+    // Tag animations
+    if (tagsRef.current) {
+      const tagElements = tagsRef.current.querySelectorAll('span');
+      anime({
+        targets: tagElements,
+        opacity: [0, 1],
+        translateX: [20, 0],
+        delay: anime.stagger(100, { start: 300 + index * 100 }),
+        duration: 600,
+        easing: 'easeOutCubic'
+      });
+    }
+  }, [index]);
+
   return (
-    <div className="group bg-white rounded-lg shadow-md overflow-hidden transition-transform duration-300 hover:-translate-y-2">
+    <div 
+      ref={cardRef}
+      className="group bg-white rounded-lg shadow-md overflow-hidden"
+      style={{ opacity: 0 }} // Initial state for animation
+    >
       <div className="relative h-48 overflow-hidden">
         <div className={`absolute inset-0 ${iconBgClass} flex items-center justify-center`}>
-          <i className={`bx ${icon} text-6xl`}></i>
+          <i ref={iconRef} className={`bx ${icon} text-6xl`}></i>
         </div>
         <div className="absolute inset-0 bg-gradient-to-t from-black/70 to-transparent opacity-0 group-hover:opacity-100 transition-opacity flex items-end justify-center p-4">
           <div className="flex space-x-3">
@@ -59,9 +141,9 @@ const ProjectCard: React.FC<ProjectProps> = ({ title, description, icon, iconBgC
         <p className="text-gray-600 text-sm mb-4">
           {description}
         </p>
-        <div className="flex flex-wrap gap-2">
+        <div ref={tagsRef} className="flex flex-wrap gap-2">
           {tags.map((tag, index) => (
-            <span key={index} className={`text-xs ${tagBgClass} px-2 py-1 rounded-full`}>
+            <span key={index} className={`text-xs ${tagBgClass} px-2 py-1 rounded-full`} style={{ opacity: 0 }}>
               {tag}
             </span>
           ))}
@@ -83,7 +165,7 @@ const ProjectsSection: React.FC = () => {
         
         <div className="grid md:grid-cols-2 lg:grid-cols-3 gap-8">
           {projects.map((project, index) => (
-            <ProjectCard key={index} {...project} />
+            <ProjectCard key={index} {...project} index={index} />
           ))}
         </div>
         
