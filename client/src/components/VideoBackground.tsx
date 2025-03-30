@@ -9,12 +9,28 @@ const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.7 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
 
   useEffect(() => {
-    // Autoplay the video
-    if (videoRef.current) {
-      videoRef.current.play().catch(error => {
-        console.log('Error playing video:', error);
-      });
-    }
+    // Autoplay the video with retry mechanism
+    const playVideo = async () => {
+      if (videoRef.current) {
+        try {
+          await videoRef.current.play();
+          console.log('Video playing successfully');
+        } catch (error) {
+          console.log('Error playing video:', error);
+          // Retry playing after a short delay
+          setTimeout(() => playVideo(), 1000);
+        }
+      }
+    };
+    
+    playVideo();
+    
+    // Make sure video doesn't get garbage collected
+    return () => {
+      if (videoRef.current) {
+        videoRef.current.pause();
+      }
+    };
   }, []);
 
   return (

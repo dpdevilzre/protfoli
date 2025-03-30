@@ -7,7 +7,28 @@
     @apply border-border;
   }
 
+  html, body {
+    @apply font-sans antialiased bg-background text-foreground h-full;
+    overflow-x: hidden;
+  }
+  
   body {
-    @apply font-sans antialiased bg-background text-foreground;
+    min-height: 100vh;
+    position: relative;
+  }
+  
+  /* Make sure main content containers allow background to show through */
+  #root {
+    min-height: 100vh;
+    position: relative;
+    z-index: 1;
+    overflow-x: hidden;
+  }
+  
+  /* Ensure content sections don't hide the background */
+  section {
+    background-color: transparent;
+    position: relative;
+    z-index: 1;
   }
 }

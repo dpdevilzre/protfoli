@@ -1,5 +1,4 @@
 import React, { useEffect } from "react";
-import Header from "@/components/Header";
 import HeroSection from "@/components/HeroSection";
 import AboutSection from "@/components/AboutSection";
 import SkillsSection from "@/components/SkillsSection";
@@ -128,7 +127,6 @@ const Home: React.FC = () => {
           color={colors.primary}
           secondaryColor={colors.secondary}
         />
-        <Header />
         <main className="pt-16">
           <HeroSection />
           <AboutSection />
