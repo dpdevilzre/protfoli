@@ -1,148 +1,153 @@
-import React, { useEffect, useState } from 'react';
-import { motion } from 'framer-motion';
+import React, { useEffect, useState, useRef } from 'react';
+import { motion, useSpring } from 'framer-motion';
 import { useTheme } from '@/contexts/ThemeContext';
-import { useIsMobile } from '@/hooks/use-mobile';
 
 const CustomCursor: React.FC = () => {
   const { colors } = useTheme();
-  const isMobile = useIsMobile();
-  
-  // Skip rendering cursor on mobile devices
-  if (isMobile) return null;
-  
-  const [mousePosition, setMousePosition] = useState({ x: 0, y: 0 });
-  const [cursorText, setCursorText] = useState('');
+  const [visible, setVisible] = useState(false);
+  const [text, setText] = useState<string | null>(null);
   const [isPointer, setIsPointer] = useState(false);
-  const [isVisible, setIsVisible] = useState(false);
+  const cursorRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
+  
+  // Smooth cursor position with springs
+  const cursorX = useSpring(0, { stiffness: 150, damping: 15 });
+  const cursorY = useSpring(0, { stiffness: 150, damping: 15 });
+  
+  // Smooth dot position for a trailing effect
+  const dotX = useSpring(0, { stiffness: 500, damping: 20 });
+  const dotY = useSpring(0, { stiffness: 500, damping: 20 });
   
   useEffect(() => {
-    // Make the cursor visible when we have mouse movement
-    const timeout = setTimeout(() => {
-      setIsVisible(true);
-    }, 1000);
-    
-    // Handle mouse movement
+    // Update cursor position on mouse move
     const handleMouseMove = (e: MouseEvent) => {
-      setMousePosition({ x: e.clientX, y: e.clientY });
+      cursorX.set(e.clientX);
+      cursorY.set(e.clientY);
+      dotX.set(e.clientX);
+      dotY.set(e.clientY);
+      
+      setVisible(true);
     };
     
-    // Handle cursor text
+    // Check for hoverable elements
     const handleMouseOver = (e: MouseEvent) => {
       const target = e.target as HTMLElement;
       
-      // Check if element or any parent has 'data-cursor-text' attribute
-      let cursorTextElement = target;
-      let foundText = false;
+      // Check for button or interactive elements
+      const isButton = target.tagName.toLowerCase() === 'button' || 
+                      target.closest('button') ||
+                      target.tagName.toLowerCase() === 'a' ||
+                      target.closest('a') ||
+                      target.tagName.toLowerCase() === 'input' ||
+                      target.closest('input') ||
+                      target.tagName.toLowerCase() === 'textarea' ||
+                      target.closest('textarea') ||
+                      target.tagName.toLowerCase() === 'select' ||
+                      target.closest('select');
       
-      while (cursorTextElement && !foundText) {
-        if (cursorTextElement.dataset && cursorTextElement.dataset.cursorText) {
-          setCursorText(cursorTextElement.dataset.cursorText);
-          foundText = true;
-        } else {
-          cursorTextElement = cursorTextElement.parentElement as HTMLElement;
-        }
-      }
+      // Also check for data-cursor-text attributes
+      const cursorText = target.getAttribute('data-cursor-text') || 
+                        (target.closest('[data-cursor-text]')?.getAttribute('data-cursor-text') || null);
       
-      if (!foundText) {
-        setCursorText('');
-      }
-      
-      // Check if cursor should be pointer style
-      const computedStyle = window.getComputedStyle(target);
-      setIsPointer(computedStyle.cursor === 'pointer');
+      setIsPointer(!!isButton);
+      setText(cursorText);
     };
     
-    // Reset cursor text when mouse leaves an element
+    // Show default cursor when leaving the window
     const showDefaultCursor = (e: Event) => {
-      setCursorText('');
-      setIsPointer(false);
+      setVisible(false);
     };
     
     // Add event listeners
     document.addEventListener('mousemove', handleMouseMove);
     document.addEventListener('mouseover', handleMouseOver);
     document.addEventListener('mouseout', showDefaultCursor);
+    document.addEventListener('mouseleave', showDefaultCursor);
     
-    // Clean up event listeners
     return () => {
-      clearTimeout(timeout);
+      // Clean up event listeners
       document.removeEventListener('mousemove', handleMouseMove);
       document.removeEventListener('mouseover', handleMouseOver);
       document.removeEventListener('mouseout', showDefaultCursor);
+      document.removeEventListener('mouseleave', showDefaultCursor);
+    };
+  }, [cursorX, cursorY, dotX, dotY]);
+  
+  // Set the cursor size based on if it's over a button
+  const cursorSize = isPointer ? 40 : 25;
+  const dotSize = isPointer ? 0 : 5;
+  
+  // Hide native cursor
+  useEffect(() => {
+    document.body.style.cursor = 'none';
+    
+    // Add special class for handling cursor on hoverable elements
+    document.documentElement.classList.add('custom-cursor');
+    
+    return () => {
+      document.body.style.cursor = '';
+      document.documentElement.classList.remove('custom-cursor');
     };
   }, []);
   
-  const variants = {
-    default: {
-      x: mousePosition.x - 16,
-      y: mousePosition.y - 16,
-      transition: {
-        type: 'spring',
-        mass: 0.3,
-        stiffness: 800,
-        damping: 30,
-        restDelta: 0.001
-      }
-    },
-    text: {
-      height: 80,
-      width: 80,
-      x: mousePosition.x - 40,
-      y: mousePosition.y - 40,
-      backgroundColor: `${colors.primary}20`,
-      mixBlendMode: 'difference' as const,
-      transition: {
-        type: 'spring',
-        mass: 0.3,
-        stiffness: 800,
-        damping: 30,
-        restDelta: 0.001
-      }
-    }
-  };
-  
-  if (!isVisible) return null;
-  
   return (
     <>
-      {/* Main cursor */}
+      {/* Custom cursor styles */}
+      <style dangerouslySetInnerHTML={{
+        __html: `
+          .custom-cursor a, 
+          .custom-cursor button,
+          .custom-cursor input,
+          .custom-cursor textarea,
+          .custom-cursor select,
+          .custom-cursor [role="button"] {
+            cursor: none !important;
+          }
+        `
+      }} />
+      
+      {/* Main cursor ring */}
       <motion.div
-        className={`fixed top-0 left-0 w-8 h-8 rounded-full bg-transparent border-2 border-primary z-[9999] pointer-events-none flex items-center justify-center ${
-          isPointer ? 'opacity-50 mix-blend-difference' : 'opacity-80'
-        }`}
-        variants={variants}
-        animate={cursorText ? 'text' : 'default'}
-        style={{ 
-          borderColor: colors.primary,
-          mixBlendMode: 'exclusion'
+        ref={cursorRef}
+        className="fixed top-0 left-0 z-[9999] pointer-events-none flex items-center justify-center"
+        style={{
+          x: cursorX,
+          y: cursorY,
+          width: cursorSize,
+          height: cursorSize,
+          borderRadius: '50%',
+          border: `1.5px solid ${colors.primary}`,
+          mixBlendMode: 'difference',
+          opacity: visible ? 1 : 0,
+          transition: 'width 0.2s ease-out, height 0.2s ease-out',
         }}
       >
-        {cursorText && (
-          <motion.span 
-            className="text-xs text-white font-medium text-center"
-            initial={{ opacity: 0, scale: 0.8 }}
-            animate={{ opacity: 1, scale: 1 }}
-            exit={{ opacity: 0, scale: 0.8 }}
-            transition={{ duration: 0.2 }}
+        {text && (
+          <div
+            ref={textRef}
+            className="absolute whitespace-nowrap text-[10px] font-medium"
+            style={{
+              color: 'white',
+              opacity: 0.8,
+              transform: 'translateY(25px)',
+            }}
           >
-            {cursorText}
-          </motion.span>
+            {text}
+          </div>
         )}
       </motion.div>
       
-      {/* Dot cursor */}
+      {/* Small cursor dot */}
       <motion.div
-        className="fixed top-0 left-0 w-2 h-2 rounded-full bg-primary z-[9999] pointer-events-none"
+        className="fixed top-0 left-0 z-[9999] pointer-events-none rounded-full"
         style={{
-          x: mousePosition.x - 4,
-          y: mousePosition.y - 4,
+          x: dotX,
+          y: dotY,
+          width: dotSize,
+          height: dotSize,
           backgroundColor: colors.primary,
-          mixBlendMode: 'exclusion'
-        }}
-        transition={{
-          type: 'tween',
-          ease: 'backOut',
-          duration: 0.1
+          opacity: visible && !isPointer ? 1 : 0,
+          transition: 'width 0.1s ease, height 0.1s ease, opacity 0.2s ease',
         }}
       />
     </>

@@ -1,6 +1,6 @@
 import React from 'react';
 import { motion } from 'framer-motion';
-import { FaInstagram, FaTwitter, FaLinkedinIn, FaGithub } from 'react-icons/fa';
+import { Instagram, Twitter, Linkedin, Github } from 'lucide-react';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface SocialLinksProps {
@@ -8,88 +8,87 @@ interface SocialLinksProps {
   className?: string;
 }
 
-const SocialLinks: React.FC<SocialLinksProps> = ({ vertical = false, className = '' }) => {
+const SocialLinks: React.FC<SocialLinksProps> = ({ 
+  vertical = false,
+  className = ''
+}) => {
   const { colors } = useTheme();
   
-  const links = [
-    {
-      name: 'Instagram',
-      icon: <FaInstagram size={20} />,
-      url: 'https://instagram.com/dpdevilz',
-      hoverColor: 'hover:bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500',
-      hoverText: 'hover:text-white',
-      cursorText: 'Instagram'
+  // Social media links
+  const socialLinks = [
+    { 
+      href: 'https://instagram.com/dpdevilz',
+      icon: <Instagram size={20} />,
+      label: 'Instagram'
     },
-    {
-      name: 'Twitter',
-      icon: <FaTwitter size={20} />,
-      url: 'https://twitter.com',
-      hoverColor: 'hover:bg-blue-500',
-      hoverText: 'hover:text-white',
-      cursorText: 'Twitter'
+    { 
+      href: 'https://twitter.com/',
+      icon: <Twitter size={20} />,
+      label: 'Twitter'
     },
-    {
-      name: 'LinkedIn',
-      icon: <FaLinkedinIn size={20} />,
-      url: 'https://linkedin.com',
-      hoverColor: 'hover:bg-blue-700',
-      hoverText: 'hover:text-white',
-      cursorText: 'LinkedIn'
+    { 
+      href: 'https://linkedin.com/in/',
+      icon: <Linkedin size={20} />,
+      label: 'LinkedIn'
     },
-    {
-      name: 'GitHub',
-      icon: <FaGithub size={20} />,
-      url: 'https://github.com',
-      hoverColor: 'hover:bg-gray-800',
-      hoverText: 'hover:text-white',
-      cursorText: 'GitHub'
-    }
+    { 
+      href: 'https://github.com/',
+      icon: <Github size={20} />,
+      label: 'GitHub'
+    },
   ];
   
   // Animation variants
-  const containerVariants = {
+  const container = {
     hidden: { opacity: 0 },
-    visible: {
+    show: {
       opacity: 1,
       transition: {
         staggerChildren: 0.1,
-        delayChildren: 0.2
+        delayChildren: 3.0,
       }
     }
   };
   
-  const itemVariants = {
-    hidden: vertical ? { x: -10, opacity: 0 } : { y: 10, opacity: 0 },
-    visible: {
-      x: 0,
+  const item = {
+    hidden: { opacity: 0, y: 20 },
+    show: { 
+      opacity: 1, 
       y: 0,
-      opacity: 1,
       transition: {
         type: 'spring',
         stiffness: 300,
         damping: 24
-      }
+      } 
     }
   };
   
   return (
-    <motion.div
+    <motion.div 
       className={`flex ${vertical ? 'flex-col' : 'flex-row'} gap-4 ${className}`}
-      variants={containerVariants}
+      variants={container}
       initial="hidden"
-      animate="visible"
+      animate="show"
     >
-      {links.map((link) => (
+      {socialLinks.map((link) => (
         <motion.a
-          key={link.name}
-          href={link.url}
+          key={link.label}
+          href={link.href}
           target="_blank"
-          rel="noopener noreferrer"
-          className={`w-10 h-10 flex items-center justify-center rounded-full border border-border/50 bg-background/80 backdrop-blur-sm text-foreground transition-all duration-300 ${link.hoverColor} ${link.hoverText}`}
-          variants={itemVariants}
-          whileHover={{ scale: 1.1 }}
+          rel="noreferrer"
+          className="text-muted-foreground hover:text-foreground transition-colors duration-300"
+          style={{ 
+            color: colors.textSecondary,
+            '--hover-color': colors.primary
+          } as React.CSSProperties}
+          variants={item}
+          whileHover={{ 
+            scale: 1.1, 
+            color: colors.primary
+          }}
           whileTap={{ scale: 0.95 }}
-          data-cursor-text={link.cursorText}
+          data-cursor-text={link.label}
+          aria-label={link.label}
         >
           {link.icon}
         </motion.a>

@@ -1,112 +1,92 @@
-import React, { useRef, useEffect, useState } from 'react';
-import { useTheme } from '@/contexts/ThemeContext';
+import React, { useEffect, useRef, useState } from 'react';
 
 interface VideoBackgroundProps {
   opacity?: number;
 }
 
-const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.7 }) => {
+const VideoBackground: React.FC<VideoBackgroundProps> = ({ opacity = 0.5 }) => {
   const videoRef = useRef<HTMLVideoElement>(null);
-  const containerRef = useRef<HTMLDivElement>(null);
-  const [isVideoLoaded, setIsVideoLoaded] = useState(false);
+  const [hasError, setHasError] = useState(false);
   const [retryCount, setRetryCount] = useState(0);
-  const [videoError, setVideoError] = useState<string | null>(null);
-  const { colors } = useTheme();
+  const maxRetries = 3;
   
-  // Load video with retry mechanism
   useEffect(() => {
-    if (!videoRef.current) return;
-    
     const video = videoRef.current;
-    
-    const handleVideoLoaded = () => {
-      if (video.readyState >= 3) { // HAVE_FUTURE_DATA or higher
-        setIsVideoLoaded(true);
-        setVideoError(null);
-        video.play().catch(err => {
-          console.warn("Video autoplay failed:", err);
-          // Still show the video frame even if autoplay fails
-          setIsVideoLoaded(true);
-        });
-      }
-    };
+    if (!video) return;
     
     const handleVideoError = (e: ErrorEvent) => {
-      console.error("Video loading error:", e);
-      setVideoError("Failed to load video background");
+      console.error('Video error:', e);
+      setHasError(true);
       
-      // Retry loading a few times
-      if (retryCount < 3) {
+      if (retryCount < maxRetries) {
+        // Try to reload the video after a short delay
         setTimeout(() => {
-          setRetryCount(prev => prev + 1);
-          video.load(); // Retry loading
-        }, 1000 * (retryCount + 1)); // Exponential backoff
+          setRetryCount(prevCount => prevCount + 1);
+          if (video) {
+            video.load();
+            video.play().catch(err => {
+              console.error('Failed to play video:', err);
+            });
+          }
+        }, 2000);
       }
     };
     
-    // Check if video is already loaded
-    if (video.readyState >= 3) {
-      handleVideoLoaded();
-    } else {
-      video.addEventListener('loadeddata', handleVideoLoaded);
-      video.addEventListener('error', handleVideoError as EventListener);
-    }
+    const handleCanPlay = () => {
+      setHasError(false);
+      
+      // Set playback settings for smoother playback
+      video.playbackRate = 0.75; // Slightly slower for smoother effect
+    };
+    
+    video.addEventListener('error', handleVideoError as any);
+    video.addEventListener('canplay', handleCanPlay);
+    
+    // Initial play
+    video.play().catch(err => {
+      console.error('Initial video play failed:', err);
+      setHasError(true);
+    });
     
     return () => {
-      video.removeEventListener('loadeddata', handleVideoLoaded);
-      video.removeEventListener('error', handleVideoError as EventListener);
-      video.pause();
+      video.removeEventListener('error', handleVideoError as any);
+      video.removeEventListener('canplay', handleCanPlay);
     };
   }, [retryCount]);
   
   return (
-    <div ref={containerRef} className="h-full w-full overflow-hidden relative">
-      {/* The video element */}
-      <video
-        ref={videoRef}
-        className={`absolute inset-0 object-cover w-full h-full transition-opacity duration-1000 ${
-          isVideoLoaded ? 'opacity-100' : 'opacity-0'
-        }`}
-        loop
-        muted
-        playsInline
-        preload="auto"
-        style={{ 
-          filter: 'brightness(0.7) blur(2px)',
-        }}
-      >
-        <source src="/assets/3693587-hd_1920_1080_30fps.mp4" type="video/mp4" />
-        Your browser does not support the video tag.
-      </video>
-      
-      {/* Dark overlay and gradient for better text readability */}
-      <div 
-        className="absolute inset-0 bg-black opacity-40"
-        style={{ mixBlendMode: 'multiply' }}
-      ></div>
-      
-      {/* Gradient overlays */}
-      <div 
-        className="absolute inset-0 opacity-60"
-        style={{
-          background: `linear-gradient(45deg, ${colors.primary}20 0%, transparent 70%)`,
-          mixBlendMode: 'overlay',
-        }}
-      ></div>
-      
-      <div 
-        className="absolute inset-0 opacity-50"
-        style={{
-          background: `linear-gradient(to bottom, transparent 40%, ${colors.background} 100%)`,
-        }}
-      ></div>
-      
-      {/* Error message */}
-      {videoError && (
-        <div className="absolute inset-0 flex items-center justify-center bg-background/70 text-muted-foreground z-10">
-          <p>{videoError}</p>
+    <div className="absolute inset-0 w-full h-full overflow-hidden z-[-1]">
+      {hasError && retryCount >= maxRetries ? (
+        <div className="absolute inset-0 flex items-center justify-center text-muted-foreground">
+          <p>Video background unavailable</p>
         </div>
+      ) : (
+        <video
+          ref={videoRef}
+          className="absolute w-full h-full object-cover"
+          autoPlay
+          loop
+          muted
+          playsInline
+          style={{ 
+            filter: 'blur(2px) brightness(0.6)', 
+            opacity: opacity 
+          }}
+        >
+          <source src="/assets/background-video.mp4" type="video/mp4" />
+          Your browser does not support the video tag.
+        </video>
       )}
+      
+      {/* Gradient overlays for depth */}
+      <div 
+        className="absolute inset-0 bg-gradient-to-t from-background to-transparent opacity-70"
+        aria-hidden="true"
+      />
+      <div 
+        className="absolute inset-0 bg-gradient-to-b from-background to-transparent opacity-70"
+        aria-hidden="true"
+      />
     </div>
   );
 };

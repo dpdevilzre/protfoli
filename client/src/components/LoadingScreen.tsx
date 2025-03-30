@@ -1,178 +1,102 @@
-import React, { useEffect, useState } from 'react';
+import React, { useEffect, useState, useRef } from 'react';
 import { motion, AnimatePresence } from 'framer-motion';
 import { useTheme } from '@/contexts/ThemeContext';
+import anime from 'animejs';
 
 interface LoadingScreenProps {
   duration?: number; // Duration in ms
 }
 
-const LoadingScreen: React.FC<LoadingScreenProps> = ({ duration = 2000 }) => {
-  const [isVisible, setIsVisible] = useState(true);
-  const [progress, setProgress] = useState(0);
+const LoadingScreen: React.FC<LoadingScreenProps> = ({ duration = 2500 }) => {
   const { colors } = useTheme();
+  const [isVisible, setIsVisible] = useState(true);
+  const logoRef = useRef<HTMLDivElement>(null);
+  const textRef = useRef<HTMLDivElement>(null);
   
   useEffect(() => {
-    // Set body to prevent scrolling while loading
-    document.body.style.overflow = 'hidden';
+    // Animate logo
+    anime({
+      targets: logoRef.current,
+      scale: [0.8, 1.2, 1],
+      opacity: [0, 1],
+      duration: 1500,
+      easing: 'easeOutElastic(1, .5)',
+    });
     
-    // Animate progress from 0 to 100
-    const interval = setInterval(() => {
-      setProgress((prevProgress) => {
-        if (prevProgress >= 100) {
-          clearInterval(interval);
-          return 100;
-        }
-        return prevProgress + 1;
-      });
-    }, duration / 100);
+    // Animate text
+    anime({
+      targets: textRef.current?.querySelectorAll('span'),
+      translateY: [30, 0],
+      opacity: [0, 1],
+      duration: 800,
+      delay: anime.stagger(120),
+      easing: 'easeOutQuad',
+    });
     
-    // Hide the loading screen after duration
-    const timeout = setTimeout(() => {
+    // Hide loading screen after duration
+    const timer = setTimeout(() => {
       setIsVisible(false);
-      document.body.style.overflow = 'auto';
     }, duration);
     
-    return () => {
-      clearInterval(interval);
-      clearTimeout(timeout);
-      document.body.style.overflow = 'auto';
-    };
+    // Clean up timer
+    return () => clearTimeout(timer);
   }, [duration]);
-  
-  // Variants for animations
-  const containerVariants = {
-    visible: { opacity: 1 },
-    hidden: { 
-      opacity: 0,
-      transition: { 
-        duration: 0.8,
-        when: "afterChildren" 
-      }
-    }
-  };
-  
-  const logoVariants = {
-    hidden: { y: 20, opacity: 0 },
-    visible: { 
-      y: 0, 
-      opacity: 1,
-      transition: { 
-        duration: 0.6,
-        ease: [0.22, 1, 0.36, 1] 
-      }
-    },
-    exit: { 
-      scale: 1.2, 
-      opacity: 0,
-      transition: { 
-        duration: 0.4,
-        ease: [0.22, 1, 0.36, 1] 
-      }
-    }
-  };
-  
-  const progressVariants = {
-    hidden: { width: 0 },
-    visible: { 
-      width: `${progress}%`,
-      transition: { 
-        ease: "easeInOut"
-      }
-    }
-  };
-  
-  // Animated name letters
-  const nameLetters = "Devesh".split('');
-  
-  const letterVariants = {
-    hidden: { y: 40, opacity: 0 },
-    visible: (i: number) => ({
-      y: 0,
-      opacity: 1,
-      transition: {
-        delay: 0.1 + (i * 0.1),
-        duration: 0.6,
-        ease: [0.22, 1, 0.36, 1]
-      }
-    }),
-    exit: (i: number) => ({
-      y: -40,
-      opacity: 0,
-      transition: {
-        delay: 0.05 * i,
-        duration: 0.4,
-        ease: [0.22, 1, 0.36, 1]
-      }
-    })
-  };
   
   return (
     <AnimatePresence>
       {isVisible && (
         <motion.div
-          className="fixed inset-0 bg-background z-[9999] flex flex-col items-center justify-center"
-          variants={containerVariants}
-          initial="visible"
-          animate="visible"
-          exit="hidden"
+          className="fixed inset-0 z-[9999] flex flex-col items-center justify-center bg-background"
+          initial={{ opacity: 1 }}
+          exit={{ 
+            opacity: 0,
+            transition: { 
+              duration: 0.6,
+              ease: 'easeInOut'
+            }
+          }}
         >
-          <div className="flex flex-col items-center">
-            {/* Animated Logo */}
-            <motion.div
-              className="w-24 h-24 rounded-full border-4 flex items-center justify-center mb-8"
-              style={{ borderColor: colors.primary }}
-              variants={logoVariants}
-              initial="hidden"
-              animate="visible"
-              exit="exit"
-            >
-              <motion.span 
-                className="text-3xl font-bold"
-                style={{ color: colors.primary }}
-              >
-                DP
-              </motion.span>
-            </motion.div>
-            
-            {/* Animated Name */}
-            <div className="flex mb-10 overflow-hidden">
-              {nameLetters.map((letter, i) => (
-                <motion.span
-                  key={i}
-                  className="text-4xl font-bold inline-block"
-                  custom={i}
-                  variants={letterVariants}
-                  initial="hidden"
-                  animate="visible"
-                  exit="exit"
-                  style={i % 2 === 0 ? { color: colors.primary } : {}}
+          {/* Logo or initial */}
+          <div 
+            ref={logoRef}
+            className="mb-8 text-5xl font-bold"
+            style={{ color: colors.primary }}
+          >
+            DP
+          </div>
+          
+          {/* Text */}
+          <div ref={textRef} className="overflow-hidden">
+            <div className="flex space-x-1.5 font-medium">
+              {"WELCOME".split('').map((char, i) => (
+                <span 
+                  key={i} 
+                  className="opacity-0 inline-block"
                 >
-                  {letter}
-                </motion.span>
+                  {char}
+                </span>
               ))}
             </div>
-            
-            {/* Progress bar */}
-            <div className="w-48 h-1 bg-muted/50 rounded-full overflow-hidden">
-              <motion.div
-                className="h-full rounded-full"
-                style={{ backgroundColor: colors.primary }}
-                variants={progressVariants}
-                initial="hidden"
-                animate="visible"
-              />
-            </div>
-            
-            {/* Progress text */}
-            <motion.p
-              className="mt-4 text-sm text-muted-foreground"
-              initial={{ opacity: 0 }}
-              animate={{ opacity: 1 }}
-              transition={{ delay: 0.5 }}
-            >
-              Loading... {progress}%
-            </motion.p>
           </div>
+          
+          {/* Loading indicator */}
+          <motion.div
+            className="mt-8 w-32 h-1 bg-muted overflow-hidden"
+            initial={{ opacity: 0 }}
+            animate={{ opacity: 1 }}
+            transition={{ delay: 0.5 }}
+          >
+            <motion.div
+              className="h-full"
+              style={{ backgroundColor: colors.primary }}
+              initial={{ width: 0 }}
+              animate={{ width: '100%' }}
+              transition={{ 
+                duration: (duration - 500) / 1000,
+                ease: 'easeInOut'
+              }}
+            />
+          </motion.div>
         </motion.div>
       )}
     </AnimatePresence>

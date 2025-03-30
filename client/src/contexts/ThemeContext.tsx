@@ -1,5 +1,6 @@
 import React, { createContext, useContext, useState, useEffect } from 'react';
-import { BackgroundType } from '@/components/AnimatedBackground';
+
+export type BackgroundType = 'particles' | 'waves' | 'gradient' | 'net' | 'live' | 'video';
 
 export type ThemeMode = 'light' | 'dark';
 export type AccentColor = 'orange' | 'blue' | 'purple' | 'green' | 'pink';
@@ -24,145 +25,137 @@ interface ThemeContextType {
   isDark: boolean;
 }
 
-const ThemeContext = createContext<ThemeContextType>({
-  themeMode: 'dark',
-  accentColor: 'orange',
-  backgroundType: 'video',
-  colors: {
-    primary: '#FF5D01',
-    secondary: '#7000FF',
-    background: '#111111',
-    text: '#FFFFFF',
-    textSecondary: '#AAAAAA',
-    accent: '#FF5D01',
-  },
-  toggleTheme: () => {},
-  setAccentColor: () => {},
-  setBackgroundType: () => {},
-  isDark: true,
-});
+const defaultColors: Record<AccentColor, string> = {
+  orange: '#f97316',
+  blue: '#3b82f6',
+  purple: '#a855f7',
+  green: '#22c55e',
+  pink: '#ec4899',
+};
 
-export const useTheme = () => useContext(ThemeContext);
+const ThemeContext = createContext<ThemeContextType | undefined>(undefined);
+
+export const useTheme = () => {
+  const context = useContext(ThemeContext);
+  if (!context) {
+    throw new Error('useTheme must be used within a ThemeProvider');
+  }
+  return context;
+};
 
 interface ThemeProviderProps {
   children: React.ReactNode;
 }
 
 export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
-  // Get saved preferences from localStorage or use defaults
+  // Get saved theme from localStorage or use system preference
   const getSavedTheme = (): ThemeMode => {
-    const saved = localStorage.getItem('themeMode');
-    if (saved && (saved === 'dark' || saved === 'light')) {
-      return saved;
+    const savedTheme = localStorage.getItem('theme');
+    if (savedTheme === 'light' || savedTheme === 'dark') {
+      return savedTheme;
     }
+    
+    // Use system preference as fallback
     return window.matchMedia('(prefers-color-scheme: dark)').matches ? 'dark' : 'light';
   };
   
+  // Get saved accent color from localStorage or use default
   const getSavedAccentColor = (): AccentColor => {
-    const saved = localStorage.getItem('accentColor');
-    if (saved && (saved === 'orange' || saved === 'blue' || saved === 'purple' || saved === 'green' || saved === 'pink')) {
-      return saved as AccentColor;
+    const savedColor = localStorage.getItem('accentColor');
+    if (savedColor && Object.keys(defaultColors).includes(savedColor)) {
+      return savedColor as AccentColor;
     }
     return 'orange';
   };
   
+  // Get saved background type from localStorage or use default
   const getSavedBackgroundType = (): BackgroundType => {
-    const saved = localStorage.getItem('backgroundType');
-    if (saved && (saved === 'particles' || saved === 'waves' || saved === 'gradient' || saved === 'net' || saved === 'live' || saved === 'video')) {
-      return saved as BackgroundType;
+    const savedBg = localStorage.getItem('backgroundType');
+    if (
+      savedBg && 
+      ['particles', 'waves', 'gradient', 'net', 'live', 'video'].includes(savedBg)
+    ) {
+      return savedBg as BackgroundType;
     }
-    return 'video';
+    return 'gradient';
   };
   
-  const [themeMode, setThemeMode] = useState<ThemeMode>(getSavedTheme);
-  const [accentColor, setAccentColor] = useState<AccentColor>(getSavedAccentColor);
-  const [backgroundType, setBackgroundType] = useState<BackgroundType>(getSavedBackgroundType);
-  const isDark = themeMode === 'dark';
+  const [themeMode, setThemeMode] = useState<ThemeMode>('light'); // Initial default
+  const [accentColor, setAccentColor] = useState<AccentColor>('orange');
+  const [backgroundType, setBackgroundType] = useState<BackgroundType>('gradient');
+  const [isDark, setIsDark] = useState(false);
   
-  // Listen for system theme changes
+  // Initialize theme and accent color from localStorage on mount
   useEffect(() => {
+    setThemeMode(getSavedTheme());
+    setAccentColor(getSavedAccentColor());
+    setBackgroundType(getSavedBackgroundType());
+    
+    // Listen for system theme changes
     const mediaQuery = window.matchMedia('(prefers-color-scheme: dark)');
     
     const handleChange = (e: MediaQueryListEvent) => {
-      if (!localStorage.getItem('themeMode')) {
-        setThemeMode(e.matches ? 'dark' : 'light');
+      const newTheme = e.matches ? 'dark' : 'light';
+      if (localStorage.getItem('theme') === null) {
+        setThemeMode(newTheme);
       }
     };
     
     mediaQuery.addEventListener('change', handleChange);
-    
-    return () => {
-      mediaQuery.removeEventListener('change', handleChange);
-    };
+    return () => mediaQuery.removeEventListener('change', handleChange);
   }, []);
   
-  // Apply theme to the document
+  // Update document attributes when theme changes
   useEffect(() => {
-    document.documentElement.classList.toggle('dark', isDark);
-    localStorage.setItem('themeMode', themeMode);
-  }, [themeMode, isDark]);
+    if (themeMode === 'dark') {
+      document.documentElement.classList.add('dark');
+      setIsDark(true);
+    } else {
+      document.documentElement.classList.remove('dark');
+      setIsDark(false);
+    }
+    
+    localStorage.setItem('theme', themeMode);
+  }, [themeMode]);
   
-  // Save accent color to localStorage
+  // Save accent color to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('accentColor', accentColor);
+    
+    // Update the CSS variables for the accent color
+    document.documentElement.style.setProperty('--color-primary', defaultColors[accentColor]);
   }, [accentColor]);
   
-  // Save background type to localStorage
+  // Save background type to localStorage when it changes
   useEffect(() => {
     localStorage.setItem('backgroundType', backgroundType);
   }, [backgroundType]);
   
+  // Calculate theme colors based on mode and accent
+  const getColors = (): ThemeColors => {
+    const primary = defaultColors[accentColor];
+    
+    return {
+      primary,
+      secondary: isDark ? '#333333' : '#f5f5f5',
+      background: isDark ? '#111111' : '#ffffff',
+      text: isDark ? '#ffffff' : '#111111',
+      textSecondary: isDark ? '#cccccc' : '#666666',
+      accent: primary,
+    };
+  };
+  
   // Toggle between light and dark mode
   const toggleTheme = () => {
-    setThemeMode(prev => (prev === 'dark' ? 'light' : 'dark'));
+    setThemeMode((prevTheme) => (prevTheme === 'light' ? 'dark' : 'light'));
   };
   
-  // Generate colors based on theme and accent
-  const getColors = (): ThemeColors => {
-    const accentColors = {
-      orange: '#FF5D01',
-      blue: '#0077FF',
-      purple: '#7000FF',
-      green: '#00CC88',
-      pink: '#FF3366',
-    };
-    
-    const secondaryColors = {
-      orange: '#7000FF',
-      blue: '#00CC88',
-      purple: '#FF3366',
-      green: '#0077FF',
-      pink: '#7000FF',
-    };
-    
-    const accent = accentColors[accentColor];
-    const secondary = secondaryColors[accentColor];
-    
-    if (isDark) {
-      return {
-        primary: accent,
-        secondary: secondary,
-        background: '#111111',
-        text: '#FFFFFF',
-        textSecondary: '#AAAAAA',
-        accent: accent,
-      };
-    } else {
-      return {
-        primary: accent,
-        secondary: secondary,
-        background: '#FFFFFF',
-        text: '#111111',
-        textSecondary: '#555555',
-        accent: accent,
-      };
-    }
-  };
-  
+  // Handle accent color changes
   const handleSetAccentColor = (color: AccentColor) => {
     setAccentColor(color);
   };
   
+  // Handle background type changes
   const handleSetBackgroundType = (type: BackgroundType) => {
     setBackgroundType(type);
   };
@@ -184,5 +177,3 @@ export const ThemeProvider: React.FC<ThemeProviderProps> = ({ children }) => {
     </ThemeContext.Provider>
   );
 };
-
-export default ThemeContext;
