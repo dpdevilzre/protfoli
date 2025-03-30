@@ -1,5 +1,6 @@
 import React from 'react';
-import { FaGithub, FaLinkedin, FaTwitter, FaInstagram } from 'react-icons/fa';
+import { motion } from 'framer-motion';
+import { FaInstagram, FaTwitter, FaLinkedinIn, FaGithub } from 'react-icons/fa';
 import { useTheme } from '@/contexts/ThemeContext';
 
 interface SocialLinksProps {
@@ -7,55 +8,93 @@ interface SocialLinksProps {
   className?: string;
 }
 
-const SocialLinks: React.FC<SocialLinksProps> = ({ vertical = true, className = '' }) => {
-  const { isDark } = useTheme();
+const SocialLinks: React.FC<SocialLinksProps> = ({ vertical = false, className = '' }) => {
+  const { colors } = useTheme();
   
-  const socialLinks = [
+  const links = [
     {
-      name: 'GitHub',
-      icon: <FaGithub />,
-      url: 'https://github.com/deveshprakash', // Update with correct URL
-    },
-    {
-      name: 'LinkedIn',
-      icon: <FaLinkedin />,
-      url: 'https://linkedin.com/in/deveshprakash', // Update with correct URL
+      name: 'Instagram',
+      icon: <FaInstagram size={20} />,
+      url: 'https://instagram.com/dpdevilz',
+      hoverColor: 'hover:bg-gradient-to-br from-purple-500 via-pink-500 to-orange-500',
+      hoverText: 'hover:text-white',
+      cursorText: 'Instagram'
     },
     {
       name: 'Twitter',
-      icon: <FaTwitter />,
-      url: 'https://twitter.com/deveshprakash', // Update with correct URL
+      icon: <FaTwitter size={20} />,
+      url: 'https://twitter.com',
+      hoverColor: 'hover:bg-blue-500',
+      hoverText: 'hover:text-white',
+      cursorText: 'Twitter'
     },
     {
-      name: 'Instagram',
-      icon: <FaInstagram />,
-      url: 'https://www.instagram.com/dpdevilz', // Updated with user's Instagram account
+      name: 'LinkedIn',
+      icon: <FaLinkedinIn size={20} />,
+      url: 'https://linkedin.com',
+      hoverColor: 'hover:bg-blue-700',
+      hoverText: 'hover:text-white',
+      cursorText: 'LinkedIn'
+    },
+    {
+      name: 'GitHub',
+      icon: <FaGithub size={20} />,
+      url: 'https://github.com',
+      hoverColor: 'hover:bg-gray-800',
+      hoverText: 'hover:text-white',
+      cursorText: 'GitHub'
     }
   ];
-
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
+    }
+  };
+  
+  const itemVariants = {
+    hidden: vertical ? { x: -10, opacity: 0 } : { y: 10, opacity: 0 },
+    visible: {
+      x: 0,
+      y: 0,
+      opacity: 1,
+      transition: {
+        type: 'spring',
+        stiffness: 300,
+        damping: 24
+      }
+    }
+  };
+  
   return (
-    <div 
-      className={`fixed z-40 right-6 top-1/2 transform -translate-y-1/2 flex ${
-        vertical ? 'flex-col space-y-5' : 'flex-row space-x-5'
-      } ${className}`}
+    <motion.div
+      className={`flex ${vertical ? 'flex-col' : 'flex-row'} gap-4 ${className}`}
+      variants={containerVariants}
+      initial="hidden"
+      animate="visible"
     >
-      {socialLinks.map((link) => (
-        <a
+      {links.map((link) => (
+        <motion.a
           key={link.name}
           href={link.url}
           target="_blank"
           rel="noopener noreferrer"
-          aria-label={link.name}
-          className={`text-xl transform transition-all duration-300 hover:scale-125 ${
-            isDark 
-              ? 'text-gray-300 hover:text-white' 
-              : 'text-gray-600 hover:text-primary'
-          }`}
+          className={`w-10 h-10 flex items-center justify-center rounded-full border border-border/50 bg-background/80 backdrop-blur-sm text-foreground transition-all duration-300 ${link.hoverColor} ${link.hoverText}`}
+          variants={itemVariants}
+          whileHover={{ scale: 1.1 }}
+          whileTap={{ scale: 0.95 }}
+          data-cursor-text={link.cursorText}
         >
           {link.icon}
-        </a>
+        </motion.a>
       ))}
-    </div>
+    </motion.div>
   );
 };
 

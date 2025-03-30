@@ -1,244 +1,303 @@
-import React, { useRef, useEffect } from 'react';
-import { useForm } from 'react-hook-form';
-import { z } from 'zod';
-import { zodResolver } from '@hookform/resolvers/zod';
+import React, { useRef } from 'react';
+import { motion, useInView } from 'framer-motion';
+import { useTheme } from '@/contexts/ThemeContext';
+import { Button } from '@/components/ui/button';
+import { Input } from '@/components/ui/input';
+import { Textarea } from '@/components/ui/textarea';
+import { useMutation } from '@tanstack/react-query';
 import { apiRequest } from '@/lib/queryClient';
+import { Form, FormControl, FormField, FormItem, FormLabel, FormMessage } from '@/components/ui/form';
+import { useForm } from 'react-hook-form';
+import { zodResolver } from '@hookform/resolvers/zod';
+import { z } from 'zod';
 import { useToast } from '@/hooks/use-toast';
-// Import framer-motion for animations instead of Velocity.js
-import { motion, useAnimation } from 'framer-motion';
+import { Phone, Mail, MapPin, Send } from 'lucide-react';
 
+// Define contact form schema directly
 const contactFormSchema = z.object({
-  name: z.string().min(1, 'Name is required'),
-  email: z.string().email('Please enter a valid email'),
-  subject: z.string().min(1, 'Subject is required'),
-  message: z.string().min(10, 'Message must be at least 10 characters')
+  name: z.string().min(2, { message: "Name must be at least 2 characters." }),
+  email: z.string().email({ message: "Please enter a valid email address." }),
+  subject: z.string().min(5, { message: "Subject must be at least 5 characters." }),
+  message: z.string().min(10, { message: "Message must be at least 10 characters." }),
 });
 
 type ContactFormValues = z.infer<typeof contactFormSchema>;
 
 const ContactSection: React.FC = () => {
+  const { colors } = useTheme();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: false, amount: 0.2 });
   const { toast } = useToast();
-  const formRef = useRef<HTMLFormElement>(null);
-  const formContainerRef = useRef<HTMLDivElement>(null);
-  const formControls = useAnimation();
   
-  const { register, handleSubmit, reset, formState: { errors, isSubmitting } } = useForm<ContactFormValues>({
+  // Form validation
+  const form = useForm<ContactFormValues>({
     resolver: zodResolver(contactFormSchema),
     defaultValues: {
       name: '',
       email: '',
       subject: '',
-      message: ''
-    }
+      message: '',
+    },
   });
-
+  
+  // Submit mutation
+  const mutation = useMutation({
+    mutationFn: async (values: ContactFormValues) => {
+      return await apiRequest('POST', '/api/contact', values);
+    },
+    onSuccess: () => {
+      toast({
+        title: "Message sent",
+        description: "Your message has been sent successfully. I'll get back to you soon!",
+      });
+      form.reset();
+    },
+    onError: (error: Error) => {
+      toast({
+        title: "Error",
+        description: "Failed to send message. Please try again later.",
+        variant: "destructive",
+      });
+    },
+  });
+  
+  // Form submission handler
   const onSubmit = async (data: ContactFormValues) => {
-    try {
-      // Animate the submit button press effect
-      formControls.start({
-        scale: [1, 0.98, 1],
-        transition: { duration: 0.3 }
-      });
-      
-      await apiRequest('POST', '/api/contact', data);
-      
-      // Success animation - pulse the form
-      formControls.start({
-        scale: [1, 1.02, 1],
-        transition: { duration: 0.5 }
-      });
-      
-      toast({
-        title: 'Message sent!',
-        description: 'Thank you for your message. I will get back to you soon.',
-      });
-      
-      reset();
-    } catch (error) {
-      // Error animation - shake the form
-      formControls.start({
-        x: [0, -10, 10, -10, 10, 0],
-        transition: { duration: 0.5 }
-      });
-      
-      toast({
-        title: 'Error',
-        description: 'There was a problem sending your message. Please try again.',
-        variant: 'destructive',
-      });
+    mutation.mutate(data);
+  };
+  
+  // Contact info items
+  const contactInfo = [
+    {
+      icon: <Mail size={24} />,
+      title: 'Email',
+      value: 'devesh.btech.cs18@gmail.com',
+      link: 'mailto:devesh.btech.cs18@gmail.com',
+    },
+    {
+      icon: <Phone size={24} />,
+      title: 'Phone',
+      value: '+91 8953-4489-05',
+      link: 'tel:+918953448905',
+    },
+    {
+      icon: <MapPin size={24} />,
+      title: 'Location',
+      value: 'Bengaluru, Karnataka, India',
+      link: 'https://maps.google.com/?q=Bengaluru',
+    },
+  ];
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.2
+      }
     }
   };
-
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 300, damping: 24 }
+    }
+  };
+  
   return (
-    <section id="contact" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 section-fade-in">
-      <div className="container mx-auto">
-        <div className="text-center mb-16">
-          <span className="text-primary font-medium">Let's connect</span>
-          <h2 className="text-3xl md:text-4xl font-bold font-poppins mt-2">Get In Touch</h2>
-          <div className="h-1 w-20 bg-orange-500 mx-auto mt-4"></div>
-        </div>
-        
-        <div className="max-w-5xl mx-auto">
-          <div className="bg-white rounded-lg shadow-lg overflow-hidden">
-            <div className="md:flex">
-              <div className="md:w-2/5 bg-primary text-white p-8">
-                <h3 className="text-2xl font-semibold mb-6">Contact Information</h3>
-                <p className="mb-8 opacity-90">
-                  Feel free to reach out to me anytime. I'm available for freelance work and full-time positions.
-                </p>
-                
-                <div className="space-y-6">
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <i className='bx bx-envelope text-xl'></i>
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="text-sm font-medium opacity-90">Email</h4>
-                      <p className="mt-1">deveshyada102@bbdu.ac.in</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <i className='bx bx-phone text-xl'></i>
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="text-sm font-medium opacity-90">Phone</h4>
-                      <p className="mt-1">+917355224335</p>
-                    </div>
-                  </div>
-                  
-                  <div className="flex items-start">
-                    <div className="flex-shrink-0 h-10 w-10 rounded-full bg-white/10 flex items-center justify-center">
-                      <i className='bx bx-map text-xl'></i>
-                    </div>
-                    <div className="ml-4">
-                      <h4 className="text-sm font-medium opacity-90">Location</h4>
-                      <p className="mt-1">Lucknow, Uttar Pradesh, India</p>
-                    </div>
-                  </div>
-                </div>
-                
-                <div className="mt-12">
-                  <h4 className="text-sm font-medium mb-4 opacity-90">Social Profiles</h4>
-                  <div className="flex space-x-4">
-                    <a href="#" className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                      <i className='bx bxl-linkedin'></i>
-                    </a>
-                    <a href="#" className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                      <i className='bx bxl-github'></i>
-                    </a>
-                    <a href="#" className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                      <i className='bx bxl-dribbble'></i>
-                    </a>
-                    <a href="#" className="h-10 w-10 rounded-full bg-white/10 flex items-center justify-center hover:bg-white/20 transition-colors">
-                      <i className='bx bxl-twitter'></i>
-                    </a>
-                  </div>
-                </div>
-              </div>
-              
-              <div className="md:w-3/5 p-8" ref={formContainerRef}>
-                <h3 className="text-2xl font-semibold text-gray-900 mb-6">Send me a message</h3>
-                
-                <motion.form 
-                  ref={formRef} 
-                  onSubmit={handleSubmit(onSubmit)}
-                  animate={formControls}
-                  initial={{ opacity: 0, y: 20 }}
-                  transition={{ duration: 0.5 }}
-                >
-                  <div className="grid grid-cols-1 md:grid-cols-2 gap-6 mb-6">
-                    <motion.div 
-                      className="form-field"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.1 }}
-                    >
-                      <label htmlFor="name" className="block text-sm font-medium text-gray-700 mb-1">Name</label>
-                      <input 
-                        type="text" 
-                        id="name" 
-                        {...register('name')}
-                        className={`w-full px-4 py-2 border ${errors.name ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-primary focus:border-primary outline-none transition`} 
-                        placeholder="Your name" 
-                      />
-                      {errors.name && <p className="mt-1 text-sm text-red-500">{errors.name.message}</p>}
-                    </motion.div>
-                    <motion.div 
-                      className="form-field"
-                      initial={{ opacity: 0, y: 20 }}
-                      animate={{ opacity: 1, y: 0 }}
-                      transition={{ duration: 0.3, delay: 0.2 }}
-                    >
-                      <label htmlFor="email" className="block text-sm font-medium text-gray-700 mb-1">Email</label>
-                      <input 
-                        type="email" 
-                        id="email" 
-                        {...register('email')}
-                        className={`w-full px-4 py-2 border ${errors.email ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-primary focus:border-primary outline-none transition`} 
-                        placeholder="Your email" 
-                      />
-                      {errors.email && <p className="mt-1 text-sm text-red-500">{errors.email.message}</p>}
-                    </motion.div>
-                  </div>
-                  
-                  <motion.div 
-                    className="mb-6 form-field"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.3 }}
-                  >
-                    <label htmlFor="subject" className="block text-sm font-medium text-gray-700 mb-1">Subject</label>
-                    <input 
-                      type="text" 
-                      id="subject" 
-                      {...register('subject')}
-                      className={`w-full px-4 py-2 border ${errors.subject ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-primary focus:border-primary outline-none transition`} 
-                      placeholder="Subject" 
+    <section
+      id="contact"
+      ref={sectionRef}
+      className="py-20 md:py-32 px-6 bg-muted/30 relative overflow-hidden"
+    >
+      <div className="container mx-auto max-w-6xl relative z-10">
+        {/* Section header */}
+        <motion.div
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">Get In Touch</h2>
+          <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+            Have a project in mind or just want to chat? Feel free to reach out!
+          </p>
+        </motion.div>
+
+        <div className="grid grid-cols-1 lg:grid-cols-5 gap-10">
+          {/* Contact form */}
+          <motion.div
+            className="lg:col-span-3 bg-background/80 backdrop-blur-sm shadow-lg rounded-xl p-8 border border-border"
+            variants={containerVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+          >
+            <motion.h3 className="text-2xl font-bold mb-6" variants={itemVariants}>
+              Send Me a Message
+            </motion.h3>
+
+            <Form {...form}>
+              <form onSubmit={form.handleSubmit(onSubmit)} className="space-y-6">
+                <div className="grid grid-cols-1 md:grid-cols-2 gap-6">
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="name"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Name</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your name" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
                     />
-                    {errors.subject && <p className="mt-1 text-sm text-red-500">{errors.subject.message}</p>}
                   </motion.div>
-                  
-                  <motion.div 
-                    className="mb-6 form-field"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.4 }}
+
+                  <motion.div variants={itemVariants}>
+                    <FormField
+                      control={form.control}
+                      name="email"
+                      render={({ field }) => (
+                        <FormItem>
+                          <FormLabel>Email</FormLabel>
+                          <FormControl>
+                            <Input placeholder="Your email" {...field} />
+                          </FormControl>
+                          <FormMessage />
+                        </FormItem>
+                      )}
+                    />
+                  </motion.div>
+                </div>
+
+                <motion.div variants={itemVariants}>
+                  <FormField
+                    control={form.control}
+                    name="subject"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Subject</FormLabel>
+                        <FormControl>
+                          <Input placeholder="Subject" {...field} />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
+                  <FormField
+                    control={form.control}
+                    name="message"
+                    render={({ field }) => (
+                      <FormItem>
+                        <FormLabel>Message</FormLabel>
+                        <FormControl>
+                          <Textarea
+                            placeholder="Your message"
+                            className="min-h-[120px] resize-none"
+                            {...field}
+                          />
+                        </FormControl>
+                        <FormMessage />
+                      </FormItem>
+                    )}
+                  />
+                </motion.div>
+
+                <motion.div variants={itemVariants}>
+                  <Button
+                    type="submit"
+                    className="w-full bg-primary hover:bg-primary/90 text-white"
+                    disabled={mutation.isPending}
                   >
-                    <label htmlFor="message" className="block text-sm font-medium text-gray-700 mb-1">Message</label>
-                    <textarea 
-                      id="message" 
-                      {...register('message')}
-                      rows={4} 
-                      className={`w-full px-4 py-2 border ${errors.message ? 'border-red-500' : 'border-gray-300'} rounded-md focus:ring-primary focus:border-primary outline-none transition resize-none`} 
-                      placeholder="Your message"
-                    ></textarea>
-                    {errors.message && <p className="mt-1 text-sm text-red-500">{errors.message.message}</p>}
-                  </motion.div>
-                  
-                  <motion.div 
-                    className="form-field"
-                    initial={{ opacity: 0, y: 20 }}
-                    animate={{ opacity: 1, y: 0 }}
-                    transition={{ duration: 0.3, delay: 0.5 }}
-                    whileHover={{ scale: 1.02 }}
-                    whileTap={{ scale: 0.98 }}
+                    {mutation.isPending ? (
+                      <span className="flex items-center gap-2">
+                        <div className="h-4 w-4 border-2 border-white border-t-transparent rounded-full animate-spin" />
+                        Sending...
+                      </span>
+                    ) : (
+                      <span className="flex items-center gap-2">
+                        Send Message
+                        <Send size={16} />
+                      </span>
+                    )}
+                  </Button>
+                </motion.div>
+              </form>
+            </Form>
+          </motion.div>
+
+          {/* Contact information */}
+          <motion.div
+            className="lg:col-span-2 flex flex-col justify-between"
+            variants={containerVariants}
+            initial="hidden"
+            animate={isInView ? "visible" : "hidden"}
+          >
+            <div>
+              <motion.h3 className="text-2xl font-bold mb-6" variants={itemVariants}>
+                Contact Information
+              </motion.h3>
+
+              <div className="space-y-6 mb-8">
+                {contactInfo.map((item, index) => (
+                  <motion.a
+                    key={item.title}
+                    href={item.link}
+                    target={item.title === 'Location' ? '_blank' : undefined}
+                    rel={item.title === 'Location' ? 'noopener noreferrer' : undefined}
+                    className="flex items-start gap-4 group p-4 rounded-lg hover:bg-background/50 transition-colors duration-300"
+                    variants={itemVariants}
+                    data-cursor-text={item.title}
                   >
-                    <button 
-                      type="submit" 
-                      disabled={isSubmitting}
-                      className="w-full px-8 py-3 bg-primary text-white font-medium rounded-md shadow hover:bg-primary-dark transition-colors focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50 disabled:opacity-70"
-                    >
-                      {isSubmitting ? 'Sending...' : 'Send Message'}
-                    </button>
-                  </motion.div>
-                </motion.form>
+                    <div className="p-3 rounded-full bg-primary/10 text-primary group-hover:bg-primary group-hover:text-white transition-colors duration-300">
+                      {item.icon}
+                    </div>
+                    <div>
+                      <h4 className="font-medium text-lg">{item.title}</h4>
+                      <p className="text-muted-foreground group-hover:text-foreground transition-colors duration-300">
+                        {item.value}
+                      </p>
+                    </div>
+                  </motion.a>
+                ))}
               </div>
             </div>
-          </div>
+
+            {/* Social links suggestion */}
+            <motion.div
+              className="bg-primary/10 rounded-xl p-6 mt-6"
+              variants={itemVariants}
+            >
+              <h4 className="font-medium text-lg mb-2">Follow me on social media</h4>
+              <p className="text-muted-foreground mb-4">
+                Connect with me on social media to see my latest updates and projects.
+              </p>
+              <a
+                href="#"
+                className="inline-block text-primary font-medium hover:underline"
+                data-cursor-text="Social Links"
+              >
+                Check the links on the left
+              </a>
+            </motion.div>
+          </motion.div>
         </div>
       </div>
+
+      {/* Decorative elements */}
+      <div className="absolute top-1/4 left-0 w-64 h-64 bg-primary/5 rounded-full blur-3xl -z-10" />
+      <div className="absolute bottom-1/4 right-0 w-80 h-80 bg-primary/5 rounded-full blur-3xl -z-10" />
     </section>
   );
 };

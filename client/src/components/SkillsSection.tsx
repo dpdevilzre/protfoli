@@ -1,123 +1,178 @@
 import React, { useEffect, useRef } from 'react';
-import { Progress } from '@/components/ui/progress';
+import { motion, useInView } from 'framer-motion';
+import { useTheme } from '@/contexts/ThemeContext';
 import gsap from 'gsap';
-import { ScrollTrigger } from 'gsap/ScrollTrigger';
-
-// Register ScrollTrigger plugin
-gsap.registerPlugin(ScrollTrigger);
 
 interface SkillProps {
   name: string;
   percentage: number;
 }
 
-const technicalSkills: SkillProps[] = [
-  { name: 'Debian', percentage: 85 },
-  { name: 'MongoDB', percentage: 80 },
-  { name: 'React', percentage: 75 },
-  { name: 'Node.js', percentage: 70 },
-  { name: 'Express.js', percentage: 75 }
-];
-
-const professionalSkills: SkillProps[] = [
-  { name: 'Front-End Development', percentage: 90 },
-  { name: 'Web Accessibility', percentage: 85 },
-  { name: 'Problem-solving & Analytical Thinking', percentage: 80 },
-  { name: 'SEO Fundamentals', percentage: 75 },
-  { name: 'Web Development', percentage: 85 }
-];
-
-const SkillBar: React.FC<SkillProps> = ({ name, percentage }) => {
-  const [value, setValue] = React.useState(0);
-  const progressRef = useRef<HTMLDivElement>(null);
-  const percentRef = useRef<HTMLSpanElement>(null);
-  const skillNameRef = useRef<HTMLSpanElement>(null);
+const SkillsSection: React.FC = () => {
+  const { colors } = useTheme();
+  const sectionRef = useRef<HTMLElement>(null);
+  const isInView = useInView(sectionRef, { once: false, amount: 0.2 });
   
-  useEffect(() => {
-    if (progressRef.current && percentRef.current && skillNameRef.current) {
-      const el = progressRef.current;
-      
-      // Create GSAP animation for the skill bar
-      const tl = gsap.timeline({
-        scrollTrigger: {
-          trigger: el,
-          start: "top 80%", 
-          end: "bottom 20%",
-          toggleActions: "play none none reverse"
-        }
-      });
-      
-      // Animate skill name with slight bounce
-      tl.from(skillNameRef.current, {
-        x: -20,
-        opacity: 0,
-        duration: 0.5,
-        ease: "back.out(1.7)"
-      });
-      
-      // Animate percentage counter
-      tl.from(percentRef.current, {
-        textContent: 0,
-        duration: 1.5,
-        ease: "power2.out",
-        snap: { textContent: 1 },
-        onUpdate: () => {
-          setValue(parseInt(percentRef.current!.textContent || "0"));
-        }
-      }, "-=0.3");
-      
-      // Setup ScrollTrigger cleanup
-      return () => {
-        tl.scrollTrigger && tl.scrollTrigger.kill();
-        tl.kill();
-      };
+  // Frontend skills
+  const frontendSkills: SkillProps[] = [
+    { name: 'HTML/CSS', percentage: 95 },
+    { name: 'JavaScript/TypeScript', percentage: 90 },
+    { name: 'React.js', percentage: 92 },
+    { name: 'Next.js', percentage: 85 },
+    { name: 'Tailwind CSS', percentage: 88 },
+  ];
+  
+  // Backend skills
+  const backendSkills: SkillProps[] = [
+    { name: 'Node.js', percentage: 85 },
+    { name: 'Express.js', percentage: 88 },
+    { name: 'MongoDB', percentage: 80 },
+    { name: 'PostgreSQL', percentage: 75 },
+    { name: 'REST API', percentage: 90 },
+  ];
+  
+  // Other skills
+  const otherSkills: SkillProps[] = [
+    { name: 'UI/UX Design', percentage: 78 },
+    { name: 'Git/GitHub', percentage: 85 },
+    { name: 'Docker', percentage: 70 },
+    { name: 'AWS', percentage: 65 },
+    { name: 'CI/CD', percentage: 72 },
+  ];
+  
+  // Animation variants
+  const containerVariants = {
+    hidden: { opacity: 0 },
+    visible: {
+      opacity: 1,
+      transition: {
+        staggerChildren: 0.1,
+        delayChildren: 0.3
+      }
     }
-  }, [percentage]);
-
-  return (
-    <div className="mb-6" ref={progressRef}>
+  };
+  
+  const itemVariants = {
+    hidden: { y: 20, opacity: 0 },
+    visible: {
+      y: 0,
+      opacity: 1,
+      transition: { type: 'spring', stiffness: 300, damping: 24 }
+    }
+  };
+  
+  // GSAP animation for skill bars
+  useEffect(() => {
+    if (isInView) {
+      const skillBars = document.querySelectorAll('.skill-progress-bar');
+      
+      gsap.fromTo(
+        skillBars,
+        { width: 0 },
+        {
+          width: (index, element) => element.getAttribute('data-percentage') + '%',
+          duration: 1.5,
+          ease: 'power2.out',
+          stagger: 0.1,
+          delay: 0.2
+        }
+      );
+    }
+  }, [isInView]);
+  
+  // Skill bar component
+  const SkillBar: React.FC<SkillProps> = ({ name, percentage }) => (
+    <div className="mb-6">
       <div className="flex justify-between mb-2">
-        <span className="font-medium text-gray-700" ref={skillNameRef}>{name}</span>
-        <span className="text-sm text-gray-500" ref={percentRef}>{percentage}%</span>
+        <span className="font-medium">{name}</span>
+        <span className="text-sm text-muted-foreground">{percentage}%</span>
       </div>
-      <Progress value={value} className="h-2" />
+      <div className="h-2 bg-muted rounded-full overflow-hidden">
+        <div 
+          className="skill-progress-bar h-full rounded-full" 
+          style={{ backgroundColor: colors.primary, width: 0 }}
+          data-percentage={percentage}
+        />
+      </div>
     </div>
   );
-};
-
-const SkillsSection: React.FC = () => {
+  
   return (
-    <section id="skills" className="py-20 px-4 sm:px-6 lg:px-8 bg-gray-50 section-fade-in">
-      <div className="container mx-auto">
-        <div className="text-center mb-16">
-          <span className="text-primary font-medium">What I'm good at</span>
-          <h2 className="text-3xl md:text-4xl font-bold font-poppins mt-2">My Skills</h2>
-          <div className="h-1 w-20 bg-orange-500 mx-auto mt-4"></div>
-        </div>
+    <section 
+      id="skills" 
+      ref={sectionRef}
+      className="py-20 md:py-32 px-6 bg-muted/30"
+    >
+      <div className="container mx-auto max-w-6xl">
+        {/* Section header */}
+        <motion.div 
+          className="text-center mb-16"
+          initial={{ opacity: 0, y: 20 }}
+          animate={isInView ? { opacity: 1, y: 0 } : { opacity: 0, y: 20 }}
+          transition={{ duration: 0.6 }}
+        >
+          <h2 className="text-4xl md:text-5xl font-bold mb-4">Technical Skills</h2>
+          <div className="h-1 w-20 bg-primary mx-auto rounded-full" />
+          <p className="mt-6 text-lg text-muted-foreground max-w-2xl mx-auto">
+            I specialize in modern web technologies, with a focus on creating responsive, performant, and accessible applications.
+          </p>
+        </motion.div>
         
-        <div className="grid md:grid-cols-2 gap-12 max-w-4xl mx-auto">
-          <div>
-            <h3 className="text-xl font-semibold font-poppins mb-6 flex items-center">
-              <i className='bx bx-code text-2xl text-primary mr-2'></i>
-              Technical Skills
-            </h3>
-            
-            {technicalSkills.map((skill, index) => (
-              <SkillBar key={index} name={skill.name} percentage={skill.percentage} />
+        {/* Skills grid */}
+        <motion.div 
+          className="grid grid-cols-1 md:grid-cols-3 gap-10"
+          variants={containerVariants}
+          initial="hidden"
+          animate={isInView ? "visible" : "hidden"}
+        >
+          {/* Frontend skills */}
+          <motion.div 
+            className="bg-background/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-border"
+            variants={itemVariants}
+          >
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: `${colors.primary}20` }}>
+                <span className="text-primary text-xl font-bold">F</span>
+              </div>
+              <h3 className="text-2xl font-bold">Frontend</h3>
+            </div>
+            {frontendSkills.map((skill) => (
+              <SkillBar key={skill.name} name={skill.name} percentage={skill.percentage} />
             ))}
-          </div>
+          </motion.div>
           
-          <div>
-            <h3 className="text-xl font-semibold font-poppins mb-6 flex items-center">
-              <i className='bx bx-briefcase text-2xl text-primary mr-2'></i>
-              Professional Skills
-            </h3>
-            
-            {professionalSkills.map((skill, index) => (
-              <SkillBar key={index} name={skill.name} percentage={skill.percentage} />
+          {/* Backend skills */}
+          <motion.div 
+            className="bg-background/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-border"
+            variants={itemVariants}
+          >
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: `${colors.primary}20` }}>
+                <span className="text-primary text-xl font-bold">B</span>
+              </div>
+              <h3 className="text-2xl font-bold">Backend</h3>
+            </div>
+            {backendSkills.map((skill) => (
+              <SkillBar key={skill.name} name={skill.name} percentage={skill.percentage} />
             ))}
-          </div>
-        </div>
+          </motion.div>
+          
+          {/* Other skills */}
+          <motion.div 
+            className="bg-background/80 backdrop-blur-sm shadow-lg rounded-xl p-6 border border-border"
+            variants={itemVariants}
+          >
+            <div className="flex items-center mb-6">
+              <div className="w-10 h-10 rounded-full flex items-center justify-center mr-3" style={{ backgroundColor: `${colors.primary}20` }}>
+                <span className="text-primary text-xl font-bold">O</span>
+              </div>
+              <h3 className="text-2xl font-bold">Other</h3>
+            </div>
+            {otherSkills.map((skill) => (
+              <SkillBar key={skill.name} name={skill.name} percentage={skill.percentage} />
+            ))}
+          </motion.div>
+        </motion.div>
       </div>
     </section>
   );

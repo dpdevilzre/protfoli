@@ -1,143 +1,132 @@
 import React, { useState } from 'react';
-import { useTheme, AccentColor } from '@/contexts/ThemeContext';
-import { BackgroundType } from '@/components/AnimatedBackground';
 import { motion, AnimatePresence } from 'framer-motion';
-import { Moon, Sun, PaintBucket, Monitor, Waves, Grid3X3, GripHorizontal } from 'lucide-react';
+import { useTheme, AccentColor } from '@/contexts/ThemeContext';
+import { Button } from '@/components/ui/button';
+import { 
+  Settings2, 
+  Sun, 
+  Moon, 
+  X, 
+  Droplets, 
+  Waves, 
+  GripHorizontal, 
+  Grid3X3, 
+  MoreHorizontal, 
+  Video 
+} from 'lucide-react';
+import { BackgroundType } from './AnimatedBackground';
 
 const ThemeToggle: React.FC = () => {
-  const { 
-    themeMode, 
-    toggleTheme, 
-    accentColor, 
-    setAccentColor, 
-    backgroundType, 
-    setBackgroundType,
-    isDark 
-  } = useTheme();
+  const { themeMode, accentColor, backgroundType, toggleTheme, setAccentColor, setBackgroundType } = useTheme();
+  const [isOpen, setIsOpen] = useState(false);
   
-  const [isExpanded, setIsExpanded] = useState(false);
-  
-  // Available accent colors
+  // Define accent colors with their hex values
   const accentColors: { value: AccentColor; hex: string; name: string }[] = [
-    { value: 'orange', hex: '#FF6B35', name: 'Orange' },
-    { value: 'blue', hex: '#3498db', name: 'Blue' },
-    { value: 'purple', hex: '#8e44ad', name: 'Purple' },
-    { value: 'green', hex: '#27ae60', name: 'Green' },
-    { value: 'pink', hex: '#e84393', name: 'Pink' }
+    { value: 'orange', hex: '#FF5D01', name: 'Orange' },
+    { value: 'blue', hex: '#0077FF', name: 'Blue' },
+    { value: 'purple', hex: '#7000FF', name: 'Purple' },
+    { value: 'green', hex: '#00CC88', name: 'Green' },
+    { value: 'pink', hex: '#FF3366', name: 'Pink' },
   ];
   
-  // Available background types
+  // Define background types
   const backgroundTypes: { value: BackgroundType; icon: React.ReactNode; name: string }[] = [
-    { value: 'video', icon: <Monitor size={16} />, name: 'Video' },
-    { value: 'live', icon: <Grid3X3 size={16} />, name: 'Pro' },
-    { value: 'particles', icon: <Grid3X3 size={16} />, name: 'Particles' },
+    { value: 'particles', icon: <Droplets size={16} />, name: 'Particles' },
     { value: 'waves', icon: <Waves size={16} />, name: 'Waves' },
     { value: 'gradient', icon: <GripHorizontal size={16} />, name: 'Gradient' },
-    { value: 'net', icon: <Grid3X3 size={16} />, name: 'Network' }
+    { value: 'net', icon: <Grid3X3 size={16} />, name: 'Network' },
+    { value: 'live', icon: <MoreHorizontal size={16} />, name: 'Interactive' },
+    { value: 'video', icon: <Video size={16} />, name: 'Video' },
   ];
   
+  const toggleOpen = () => {
+    setIsOpen(!isOpen);
+  };
+
   return (
-    <div className="fixed bottom-6 right-6 z-50">
-      {/* Toggle button */}
-      <button 
-        onClick={() => setIsExpanded(!isExpanded)}
-        className="w-12 h-12 rounded-full shadow-lg flex items-center justify-center bg-white dark:bg-slate-800 text-slate-800 dark:text-white"
+    <div className="fixed bottom-5 right-5 z-50">
+      {/* Main toggle button */}
+      <Button
+        size="icon"
+        variant="outline"
+        className="rounded-full h-12 w-12 border-2 border-border bg-background/80 backdrop-blur-md shadow-lg hover:shadow-xl transition-all duration-300"
+        onClick={toggleOpen}
         aria-label="Theme settings"
       >
-        <PaintBucket size={20} />
-      </button>
+        {isOpen ? <X size={20} /> : <Settings2 size={20} />}
+      </Button>
       
-      {/* Expanded panel */}
+      {/* Theme settings panel */}
       <AnimatePresence>
-        {isExpanded && (
+        {isOpen && (
           <motion.div 
-            initial={{ opacity: 0, y: 10, scale: 0.9 }}
+            className="absolute bottom-16 right-0 bg-background/90 backdrop-blur-lg border border-border rounded-lg p-4 shadow-lg w-[240px]"
+            initial={{ opacity: 0, y: 10, scale: 0.95 }}
             animate={{ opacity: 1, y: 0, scale: 1 }}
-            exit={{ opacity: 0, y: 10, scale: 0.9 }}
-            className="absolute bottom-16 right-0 p-4 rounded-lg shadow-xl bg-white dark:bg-slate-800 w-64"
+            exit={{ opacity: 0, y: 10, scale: 0.95 }}
+            transition={{ duration: 0.2 }}
           >
-            <div className="space-y-4">
-              {/* Theme toggle */}
+            <div className="flex flex-col space-y-4">
+              {/* Light/Dark Mode Toggle */}
               <div>
-                <h3 className="font-medium text-sm text-slate-700 dark:text-slate-200 mb-2">Theme Mode</h3>
-                <div className="flex items-center space-x-2">
-                  <button 
-                    onClick={toggleTheme}
-                    className={`flex-1 py-2 rounded-md flex items-center justify-center space-x-1 ${
-                      !isDark ? 'bg-slate-100 text-slate-900' : 'text-slate-500 dark:text-slate-400'
-                    }`}
-                    aria-label="Light theme"
+                <h3 className="text-sm font-medium mb-2">Theme Mode</h3>
+                <div className="flex space-x-2">
+                  <Button
+                    size="sm"
+                    variant={themeMode === 'light' ? 'default' : 'outline'}
+                    className="flex-1 gap-1"
+                    onClick={themeMode === 'dark' ? toggleTheme : undefined}
                   >
                     <Sun size={16} />
-                    <span className="text-sm">Light</span>
-                  </button>
-                  
-                  <button 
-                    onClick={toggleTheme}
-                    className={`flex-1 py-2 rounded-md flex items-center justify-center space-x-1 ${
-                      isDark ? 'bg-slate-700 text-white' : 'text-slate-500'
-                    }`}
-                    aria-label="Dark theme"
+                    <span>Light</span>
+                  </Button>
+                  <Button
+                    size="sm"
+                    variant={themeMode === 'dark' ? 'default' : 'outline'}
+                    className="flex-1 gap-1"
+                    onClick={themeMode === 'light' ? toggleTheme : undefined}
                   >
                     <Moon size={16} />
-                    <span className="text-sm">Dark</span>
-                  </button>
-                  
-                  <button 
-                    onClick={toggleTheme}
-                    className="py-2 px-3 rounded-md flex items-center justify-center bg-slate-100 dark:bg-slate-700 text-slate-700 dark:text-slate-200"
-                    aria-label="System theme"
-                  >
-                    <Monitor size={16} />
-                  </button>
+                    <span>Dark</span>
+                  </Button>
                 </div>
               </div>
               
-              {/* Accent color */}
+              {/* Accent Color Options */}
               <div>
-                <h3 className="font-medium text-sm text-slate-700 dark:text-slate-200 mb-2">Accent Color</h3>
+                <h3 className="text-sm font-medium mb-2">Accent Color</h3>
                 <div className="flex flex-wrap gap-2">
-                  {accentColors.map(color => (
+                  {accentColors.map((color) => (
                     <button
                       key={color.value}
-                      onClick={() => setAccentColor(color.value)}
-                      className={`w-8 h-8 rounded-full flex items-center justify-center ${
-                        color.value === accentColor ? 'ring-2 ring-offset-2 ring-offset-white dark:ring-offset-slate-800 ring-black dark:ring-white' : ''
+                      className={`w-8 h-8 rounded-full border-2 transition-all ${
+                        accentColor === color.value ? 'border-foreground scale-110' : 'border-transparent'
                       }`}
                       style={{ backgroundColor: color.hex }}
-                      aria-label={`${color.name} accent color`}
-                    >
-                      {color.value === accentColor && (
-                        <svg width="12" height="12" viewBox="0 0 12 12" fill="none" xmlns="http://www.w3.org/2000/svg">
-                          <path d="M10 3L4.5 8.5L2 6" stroke="white" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round"/>
-                        </svg>
-                      )}
-                    </button>
+                      onClick={() => setAccentColor(color.value)}
+                      aria-label={`Set accent color to ${color.name}`}
+                      title={color.name}
+                    />
                   ))}
                 </div>
               </div>
               
-              {/* Background type */}
+              {/* Background Options */}
               <div>
-                <h3 className="font-medium text-sm text-slate-700 dark:text-slate-200 mb-2">Background Style</h3>
-                <div className="grid grid-cols-2 gap-2">
-                  {backgroundTypes.map(bg => (
-                    <button
+                <h3 className="text-sm font-medium mb-2">Background</h3>
+                <div className="grid grid-cols-3 gap-2">
+                  {backgroundTypes.map((bg) => (
+                    <Button
                       key={bg.value}
-                      onClick={() => {
-                        console.log('Background selected:', bg.value);
-                        setBackgroundType(bg.value);
-                      }}
-                      className={`py-2 px-3 rounded-md flex items-center justify-center space-x-1 ${
-                        bg.value === backgroundType 
-                          ? 'bg-slate-100 dark:bg-slate-700 text-slate-900 dark:text-white font-bold border-2 border-primary' 
-                          : 'text-slate-500 dark:text-slate-400'
-                      }`}
-                      aria-label={bg.name}
+                      size="sm"
+                      variant={backgroundType === bg.value ? 'default' : 'outline'}
+                      className="flex flex-col items-center justify-center h-12 py-1 px-1"
+                      onClick={() => setBackgroundType(bg.value)}
+                      title={bg.name}
                     >
                       {bg.icon}
-                      <span className="text-sm">{bg.name}</span>
-                    </button>
+                      <span className="text-xs mt-1">{bg.name}</span>
+                    </Button>
                   ))}
                 </div>
               </div>

@@ -1,101 +1,254 @@
-import React from 'react';
+import React, { useEffect, useRef } from 'react';
+import { motion } from 'framer-motion';
 import { useSpring, animated } from '@react-spring/web';
+import { ArrowRight, ChevronDown } from 'lucide-react';
+import { Button } from '@/components/ui/button';
+import { useTheme } from '@/contexts/ThemeContext';
+import SocialLinks from './SocialLinks';
 
 const HeroSection: React.FC = () => {
+  const { colors, isDark } = useTheme();
+  const scrollRef = useRef<HTMLDivElement>(null);
+  
   // React Spring animations
-  const fadeIn = useSpring({
-    from: { opacity: 0, transform: 'translateY(30px)' },
-    to: { opacity: 1, transform: 'translateY(0)' },
-    config: { duration: 1000 }
-  });
-
-  const slideInRight = useSpring({
-    from: { opacity: 0, transform: 'translateX(50px)' },
-    to: { opacity: 1, transform: 'translateX(0)' },
+  const nameProps = useSpring({
+    from: { opacity: 0, y: 50 },
+    to: { opacity: 1, y: 0 },
     delay: 300,
-    config: { duration: 1000 }
+    config: {
+      mass: 1,
+      tension: 280,
+      friction: 60
+    }
   });
-
-  const buttonAnimation = useSpring({
-    from: { opacity: 0, transform: 'translateY(20px)' },
-    to: { opacity: 1, transform: 'translateY(0)' },
-    delay: 800,
-    config: { duration: 500 }
+  
+  const titleProps = useSpring({
+    from: { opacity: 0, y: 50 },
+    to: { opacity: 1, y: 0 },
+    delay: 600,
+    config: {
+      mass: 1,
+      tension: 280,
+      friction: 60
+    }
   });
-
-  const floatAnimation = useSpring({
-    to: async (next) => {
-      while (true) {
-        await next({ transform: 'translateY(-10px)' });
-        await next({ transform: 'translateY(0px)' });
+  
+  const descriptionProps = useSpring({
+    from: { opacity: 0, y: 50 },
+    to: { opacity: 1, y: 0 },
+    delay: 900,
+    config: {
+      mass: 1,
+      tension: 280,
+      friction: 60
+    }
+  });
+  
+  const buttonProps = useSpring({
+    from: { opacity: 0, y: 50 },
+    to: { opacity: 1, y: 0 },
+    delay: 1200,
+    config: {
+      mass: 1,
+      tension: 280,
+      friction: 60
+    }
+  });
+  
+  const socialProps = useSpring({
+    from: { opacity: 0, x: -50 },
+    to: { opacity: 1, x: 0 },
+    delay: 1500,
+    config: {
+      mass: 1,
+      tension: 280,
+      friction: 60
+    }
+  });
+  
+  const scrollToNextSection = () => {
+    const nextSection = document.querySelector('#about');
+    if (nextSection) {
+      window.scrollTo({
+        top: nextSection.getBoundingClientRect().top + window.scrollY - 80,
+        behavior: 'smooth'
+      });
+    }
+  };
+  
+  // Scroll indicator animation
+  const scrollIndicatorVariants = {
+    hidden: { opacity: 0, y: -10 },
+    visible: {
+      opacity: 1,
+      y: 0,
+      transition: {
+        delay: 2,
+        duration: 0.8,
+        repeat: Infinity,
+        repeatType: 'reverse' as const
       }
-    },
-    from: { transform: 'translateY(0px)' },
-    config: { duration: 2000 }
-  });
-
+    }
+  };
+  
   return (
-    <section id="home" className="min-h-screen flex items-center bg-gradient-to-br from-primary-light/5 to-primary/10 px-4 sm:px-6 lg:px-8 py-16">
-      <div className="container mx-auto">
-        <div className="lg:flex items-center justify-between">
-          <animated.div style={fadeIn} className="lg:w-1/2 lg:pr-12 mb-10 lg:mb-0">
-            <h1 className="text-4xl sm:text-5xl md:text-6xl font-bold text-gray-900 font-poppins mb-6">
-              <span className="block">Hi, I'm</span>
-              <animated.span className="text-primary bg-clip-text bg-gradient-to-r from-primary to-orange-500">Devesh Prakash</animated.span>
-            </h1>
-            <div className="flex items-center mb-6">
-              <div className="h-1 w-20 bg-orange-500 mr-4"></div>
-              <span className="text-xl font-medium text-gray-600">Web Designer</span>
-            </div>
-            <p className="text-gray-700 text-lg mb-8 max-w-lg">
-              I create responsive, user-friendly web experiences with attention to detail and focus on performance.
-            </p>
-            <animated.div style={buttonAnimation} className="flex flex-wrap gap-4">
-              <a href="#projects" className="inline-block px-8 py-4 bg-primary text-white font-medium rounded-md shadow-lg hover:bg-primary-dark transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
-                View My Work
-              </a>
-              <a href="#contact" className="inline-block px-8 py-4 bg-white text-primary border border-primary font-medium rounded-md hover:bg-primary/5 transition-all hover:scale-105 focus:outline-none focus:ring-2 focus:ring-primary focus:ring-opacity-50">
-                Contact Me
-              </a>
-            </animated.div>
-          </animated.div>
-          
-          <animated.div style={slideInRight} className="lg:w-1/2 flex justify-center">
-            <animated.div style={floatAnimation} className="relative">
-              <div className="bg-white shadow-xl rounded-xl p-4 max-w-md">
-                <div className="bg-primary/5 rounded-lg p-8">
-                  <i className='bx bxs-user-circle text-primary text-9xl block mx-auto'></i>
-                  <div className="text-center mt-4">
-                    <h2 className="text-2xl font-semibold text-gray-900 font-poppins">Devesh Prakash</h2>
-                    <p className="text-gray-600">Web Designer</p>
-                  </div>
-                  <div className="mt-6 space-y-3">
-                    <div className="flex items-center text-sm">
-                      <i className='bx bx-envelope text-primary text-xl mr-2'></i>
-                      <span className="text-gray-700">deveshyada102@bbdu.ac.in</span>
-                    </div>
-                    <div className="flex items-center text-sm">
-                      <i className='bx bx-phone text-primary text-xl mr-2'></i>
-                      <span className="text-gray-700">+917355224335</span>
-                    </div>
-                  </div>
-                  <animated.div style={buttonAnimation} className="mt-6 flex justify-center space-x-4">
-                    <a href="#" className="bg-primary h-10 w-10 rounded-full flex items-center justify-center text-white hover:bg-primary-dark hover:scale-110 transition-all">
-                      <i className='bx bxl-linkedin'></i>
-                    </a>
-                    <a href="#" className="bg-primary h-10 w-10 rounded-full flex items-center justify-center text-white hover:bg-primary-dark hover:scale-110 transition-all">
-                      <i className='bx bxl-github'></i>
-                    </a>
-                    <a href="#" className="bg-primary h-10 w-10 rounded-full flex items-center justify-center text-white hover:bg-primary-dark hover:scale-110 transition-all">
-                      <i className='bx bxl-dribbble'></i>
-                    </a>
-                  </animated.div>
-                </div>
+    <section id="home" className="min-h-screen relative flex items-center justify-center pt-24 pb-12 px-6 overflow-hidden">
+      <div className="container mx-auto max-w-6xl relative z-10">
+        <div className="grid grid-cols-1 md:grid-cols-2 gap-8 items-center">
+          {/* Content - Left Side */}
+          <div className="order-2 md:order-1">
+            {/* Vertical Social Links on Left */}
+            <animated.div 
+              style={socialProps}
+              className="absolute left-6 md:left-10 top-1/2 transform -translate-y-1/2 hidden lg:flex"
+            >
+              <div className="flex flex-col items-center gap-6">
+                <SocialLinks vertical />
+                <div className="w-px h-20 bg-border/50" />
               </div>
-              <div className="absolute -z-10 -bottom-4 -right-4 h-full w-full bg-orange-500/20 rounded-xl"></div>
             </animated.div>
-          </animated.div>
+            
+            {/* Greeting */}
+            <animated.div 
+              style={nameProps}
+              className="flex items-center gap-3 mb-4"
+            >
+              <div className="h-px w-10 bg-primary/70" />
+              <p className="text-lg text-muted-foreground font-medium">Hi, my name is</p>
+            </animated.div>
+            
+            {/* Name */}
+            <animated.h1 
+              style={nameProps}
+              className="text-5xl md:text-7xl font-bold mb-4 tracking-tight"
+            >
+              Devesh <span className="text-primary">Prakash</span>
+            </animated.h1>
+            
+            {/* Title */}
+            <animated.h2 
+              style={titleProps}
+              className="text-3xl md:text-4xl font-bold mb-6 text-muted-foreground"
+            >
+              Full Stack Developer
+            </animated.h2>
+            
+            {/* Description */}
+            <animated.p 
+              style={descriptionProps}
+              className="text-lg text-muted-foreground mb-8 max-w-lg"
+            >
+              I create beautiful, responsive, and user-friendly web applications using modern technologies. Let's build something amazing together!
+            </animated.p>
+            
+            {/* CTA Buttons */}
+            <animated.div 
+              style={buttonProps}
+              className="flex flex-wrap gap-4"
+            >
+              <Button 
+                size="lg" 
+                className="gap-2 bg-primary hover:bg-primary/90 text-white"
+                onClick={() => {
+                  const contactSection = document.querySelector('#contact');
+                  if (contactSection) {
+                    window.scrollTo({
+                      top: contactSection.getBoundingClientRect().top + window.scrollY - 80,
+                      behavior: 'smooth'
+                    });
+                  }
+                }}
+                data-cursor-text="Get In Touch"
+              >
+                Get In Touch
+                <ArrowRight size={16} />
+              </Button>
+              
+              <Button 
+                size="lg" 
+                variant="outline"
+                className="border-primary text-primary hover:bg-primary/10"
+                asChild
+                data-cursor-text="Resume"
+              >
+                <a href="/assets/deveshresume.pdf" download>
+                  Download CV
+                </a>
+              </Button>
+            </animated.div>
+            
+            {/* Mobile Social Links */}
+            <animated.div 
+              style={socialProps}
+              className="mt-8 md:hidden"
+            >
+              <SocialLinks />
+            </animated.div>
+          </div>
+          
+          {/* Profile Image - Right Side */}
+          <div className="order-1 md:order-2 flex justify-center">
+            <motion.div 
+              className="relative"
+              initial={{ opacity: 0, scale: 0.8 }}
+              animate={{ opacity: 1, scale: 1 }}
+              transition={{ duration: 0.8, delay: 0.5 }}
+            >
+              {/* Hero Image Area */}
+              <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-primary/20">
+                <div className="absolute inset-0 flex items-center justify-center bg-muted">
+                  <span className="text-8xl font-bold" style={{ color: colors.primary }}>DP</span>
+                </div>
+                
+                {/* Animated circles */}
+                <motion.div 
+                  className="absolute inset-0 border-4 border-primary/20 rounded-full"
+                  animate={{ 
+                    rotate: 360,
+                    scale: [1, 1.05, 1]
+                  }}
+                  transition={{ 
+                    rotate: { duration: 20, repeat: Infinity, ease: "linear" },
+                    scale: { duration: 3, repeat: Infinity, repeatType: "reverse" }
+                  }}
+                />
+              </div>
+              
+              {/* Floating Role Badges */}
+              <motion.div 
+                className="absolute -bottom-4 -right-4 bg-background shadow-lg rounded-full px-4 py-2 border border-border"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 1.2, duration: 0.4, type: "spring" }}
+              >
+                <span className="text-sm font-medium">React.js Expert</span>
+              </motion.div>
+              
+              <motion.div 
+                className="absolute -top-4 -left-4 bg-background shadow-lg rounded-full px-4 py-2 border border-border"
+                initial={{ scale: 0, opacity: 0 }}
+                animate={{ scale: 1, opacity: 1 }}
+                transition={{ delay: 0.9, duration: 0.4, type: "spring" }}
+              >
+                <span className="text-sm font-medium">UI/UX Designer</span>
+              </motion.div>
+            </motion.div>
+          </div>
         </div>
+        
+        {/* Scroll indicator */}
+        <motion.div 
+          className="absolute bottom-8 left-0 right-0 flex justify-center"
+          variants={scrollIndicatorVariants}
+          initial="hidden"
+          animate="visible"
+          onClick={scrollToNextSection}
+        >
+          <div className="flex flex-col items-center gap-2 cursor-pointer" data-cursor-text="Scroll">
+            <span className="text-xs text-muted-foreground">Scroll Down</span>
+            <ChevronDown size={20} className="text-primary animate-bounce" />
+          </div>
+        </motion.div>
       </div>
     </section>
   );
