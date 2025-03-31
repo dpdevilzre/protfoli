@@ -76,7 +76,7 @@ const AboutSection: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.5, duration: 0.4, type: "spring" }}
               >
-                <span className="text-sm font-medium">4+ Years Experience</span>
+                <span className="text-sm font-medium">3 Years Experience</span>
               </motion.div>
               
               {/* Education badge */}
@@ -86,7 +86,7 @@ const AboutSection: React.FC = () => {
                 animate={{ scale: 1, opacity: 1 }}
                 transition={{ delay: 0.7, duration: 0.4, type: "spring" }}
               >
-                <span className="text-sm font-medium">B.Tech CS Graduate</span>
+                <span className="text-sm font-medium">BCADA & AI Graduate</span>
               </motion.div>
             </div>
           </motion.div>
@@ -127,10 +127,10 @@ const AboutSection: React.FC = () => {
               className="text-lg text-muted-foreground mb-8"
               variants={fadeIn}
             >
-              My journey in tech started during my B.Tech in Computer Science, where I 
-              discovered my love for building interactive web experiences. Since then, 
-              I've been constantly learning and improving my skills to stay at the 
-              forefront of web development trends.
+              My journey in tech started during my Bachelor's in Computer Applications 
+              with Data Analytics and AI, where I discovered my love for building interactive 
+              web experiences. Since then, I've been constantly learning and improving my skills 
+              to stay at the forefront of web development trends.
             </motion.p>
             
             <motion.div 
