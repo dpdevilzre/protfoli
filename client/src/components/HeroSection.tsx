@@ -196,9 +196,23 @@ const HeroSection: React.FC = () => {
             >
               {/* Hero Image Area */}
               <div className="relative w-64 h-64 md:w-80 md:h-80 rounded-full overflow-hidden border-4 border-primary/20">
-                <div className="absolute inset-0 flex items-center justify-center bg-muted">
-                  <span className="text-8xl font-bold" style={{ color: colors.primary }}>DP</span>
-                </div>
+                {/* Profile Image */}
+                <motion.div
+                  className="w-full h-full"
+                  whileHover={{ scale: 1.05 }}
+                  transition={{ duration: 0.3 }}
+                >
+                  <img 
+                    src="/assets/profile.jpg" 
+                    alt="Devesh Prakash" 
+                    className="w-full h-full object-cover"
+                  />
+                  
+                  {/* Overlay gradient */}
+                  <div 
+                    className="absolute inset-0 bg-gradient-to-b from-transparent to-primary/30 opacity-60"
+                  />
+                </motion.div>
                 
                 {/* Animated circles */}
                 <motion.div 
