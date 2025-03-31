@@ -203,7 +203,7 @@ const HeroSection: React.FC = () => {
                   transition={{ duration: 0.3 }}
                 >
                   <img 
-                    src="/assets/profile.jpg" 
+                    src="./assets/profile.jpg" 
                     alt="Devesh Prakash" 
                     className="w-full h-full object-cover"
                   />
